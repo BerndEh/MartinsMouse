@@ -1,6 +1,0 @@
-C:\Users\bernde\Documents\PSoC Creator\MartinsMouseOhneWheelFinal\MartinsMouseOhneWheel.cydsn\MartinsMouseOhneWheel.cyprj|0ec05391-c4b2-49f8-a785-5c72d15ccf72
-C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\psoc\content\default\CyAnnotationLibrary\CyAnnotationLibrary.cylib\CyAnnotationLibrary.cyprj|84ea3e69-e939-4e94-9896-9073dc57c444
-C:\Users\bernde\Documents\PSoC Creator\4.2\Downloads ( 4.2).cylib\Downloads ( 4.2).cyprj|c3a04625-a3fc-4acf-b9bf-d22a2304697d
-C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\psoc\content\cycomponentlibraryupdates\CyComponentLibraryUpdates.cylib\CyComponentLibraryUpdates.cyprj|a2c084d4-68ae-436e-b77c-b8ab91c159e3
-C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\psoc\content\cycomponentlibrary\CyComponentLibrary.cylib\CyComponentLibrary.cyprj|090d5492-842a-4b6a-a93c-f978a7a2f10d
-C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\psoc\content\cyprimitives\CyPrimitives.cylib\CyPrimitives.cyprj|e12d907b-4f1d-4825-8b0e-1f7ddd8f57ab
