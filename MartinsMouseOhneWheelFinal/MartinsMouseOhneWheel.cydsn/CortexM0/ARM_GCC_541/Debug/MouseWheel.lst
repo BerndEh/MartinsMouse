@@ -1,0 +1,1818 @@
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"MouseWheel.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.global	mbMouseWheelPosition
+  20              		.bss
+  21              		.type	mbMouseWheelPosition, %object
+  22              		.size	mbMouseWheelPosition, 1
+  23              	mbMouseWheelPosition:
+  24 0000 00       		.space	1
+  25              		.global	mbCurrentKeys
+  26              		.type	mbCurrentKeys, %object
+  27              		.size	mbCurrentKeys, 1
+  28              	mbCurrentKeys:
+  29 0001 00       		.space	1
+  30              		.section	.text.MouseWheel_ISR,"ax",%progbits
+  31              		.align	2
+  32              		.global	MouseWheel_ISR
+  33              		.code	16
+  34              		.thumb_func
+  35              		.type	MouseWheel_ISR, %function
+  36              	MouseWheel_ISR:
+  37              	.LFB35:
+  38              		.file 1 "MouseWheel.c"
+   1:MouseWheel.c  **** /* ========================================
+   2:MouseWheel.c  ****  *
+   3:MouseWheel.c  ****  * Copyright YOUR COMPANY, THE YEAR
+   4:MouseWheel.c  ****  * All Rights Reserved
+   5:MouseWheel.c  ****  * UNPUBLISHED, LICENSED SOFTWARE.
+   6:MouseWheel.c  ****  *
+   7:MouseWheel.c  ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+   8:MouseWheel.c  ****  * WHICH IS THE PROPERTY OF your company.
+   9:MouseWheel.c  ****  *
+  10:MouseWheel.c  ****  * ========================================
+  11:MouseWheel.c  **** */
+  12:MouseWheel.c  **** 
+  13:MouseWheel.c  **** #include <MouseWheel.h>
+  14:MouseWheel.c  **** 
+  15:MouseWheel.c  **** volatile uint8 mbMouseWheelPosition = 0;
+  16:MouseWheel.c  **** volatile uint8 mbCurrentKeys        = 0;
+  17:MouseWheel.c  **** 
+  18:MouseWheel.c  **** //========================================================================================
+  19:MouseWheel.c  **** // in diesem Interrupt auch die Tasten abfragen, da die Grundschleife zeitlich zu ungenau
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 2
+
+
+  20:MouseWheel.c  **** //========================================================================================
+  21:MouseWheel.c  **** //                                           LFCLK     PWM-Teiler (8-Bit)
+  22:MouseWheel.c  **** // Dieser IRQ wird mit ca. 128Hz aufgerufen (32768Hz / 256)
+  23:MouseWheel.c  **** // Um die Tasten auch zu entprellen nur jedes 4 mal diese Prüfen -> 32ms abfragen
+  24:MouseWheel.c  **** //========================================================================================
+  25:MouseWheel.c  **** CY_ISR(MouseWheel_ISR)
+  26:MouseWheel.c  **** {
+  39              		.loc 1 26 0
+  40              		.cfi_startproc
+  41              		@ args = 0, pretend = 0, frame = 8
+  42              		@ frame_needed = 1, uses_anonymous_args = 0
+  43 0000 90B5     		push	{r4, r7, lr}
+  44              		.cfi_def_cfa_offset 12
+  45              		.cfi_offset 4, -12
+  46              		.cfi_offset 7, -8
+  47              		.cfi_offset 14, -4
+  48 0002 83B0     		sub	sp, sp, #12
+  49              		.cfi_def_cfa_offset 24
+  50 0004 00AF     		add	r7, sp, #0
+  51              		.cfi_def_cfa_register 7
+  27:MouseWheel.c  ****     // Clear Interrupt Flags
+  28:MouseWheel.c  ****     isr_Wheel_ClearPending();
+  52              		.loc 1 28 0
+  53 0006 FFF7FEFF 		bl	isr_Wheel_ClearPending
+  29:MouseWheel.c  ****     PWM_ClearInterrupt(PWM_INTR_MASK_TC);
+  54              		.loc 1 29 0
+  55 000a 0120     		movs	r0, #1
+  56 000c FFF7FEFF 		bl	PWM_ClearInterrupt
+  30:MouseWheel.c  ****     //PWM_ReadStatusRegister();
+  31:MouseWheel.c  ****     
+  32:MouseWheel.c  ****     static const int8 bPhaseToDelta[16] = 
+  33:MouseWheel.c  ****     {       // Index Alt - New     Delta
+  34:MouseWheel.c  ****          0,  //  0     00  - 00   ->  0
+  35:MouseWheel.c  ****          1,  //  1     00  - 01   -> +1
+  36:MouseWheel.c  ****         -1,  //  2     00  - 10   -> -1
+  37:MouseWheel.c  ****          0,  //  3     00  - 11   ->  0  (ilegalter schritt!!!)
+  38:MouseWheel.c  ****         
+  39:MouseWheel.c  ****         -1,  //  4     01  - 00   -> -1
+  40:MouseWheel.c  ****          0,  //  5     01  - 01   ->  0
+  41:MouseWheel.c  ****          0,  //  6     01  - 10   ->  0  (ilegalter schritt!!!)
+  42:MouseWheel.c  ****          1,  //  7     01  - 11   ->  1  
+  43:MouseWheel.c  ****         
+  44:MouseWheel.c  ****          1,  //  8     10  - 00   -> +1
+  45:MouseWheel.c  ****          0,  //  9     10  - 01   ->  0  (ilegalter schritt!!!)
+  46:MouseWheel.c  ****          0,  // 10     10  - 10   ->  0 
+  47:MouseWheel.c  ****         -1,  // 11     10  - 11   -> -1
+  48:MouseWheel.c  ****         
+  49:MouseWheel.c  ****          0,  // 12     11  - 00   ->  0  (ilegalter schritt!!!)
+  50:MouseWheel.c  ****         -1,  // 13     11  - 01   -> -1
+  51:MouseWheel.c  ****         +1,  // 14     11  - 10   -> +1 
+  52:MouseWheel.c  ****          0,  // 15     11  - 11   ->  0
+  53:MouseWheel.c  ****     };
+  54:MouseWheel.c  **** 
+  55:MouseWheel.c  ****     static uint8 bLastPhase;
+  56:MouseWheel.c  ****     
+  57:MouseWheel.c  ****     uint8 bCurPhase = WheelPhaseAB_Read();
+  57              		.loc 1 57 0
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 3
+
+
+  58 0010 FC1D     		adds	r4, r7, #7
+  59 0012 FFF7FEFF 		bl	WheelPhaseAB_Read
+  60 0016 0300     		movs	r3, r0
+  61 0018 2370     		strb	r3, [r4]
+  58:MouseWheel.c  ****     
+  59:MouseWheel.c  ****     if(bLastPhase != bCurPhase)
+  62              		.loc 1 59 0
+  63 001a 264B     		ldr	r3, .L7
+  64 001c 1B78     		ldrb	r3, [r3]
+  65 001e FA1D     		adds	r2, r7, #7
+  66 0020 1278     		ldrb	r2, [r2]
+  67 0022 9A42     		cmp	r2, r3
+  68 0024 13D0     		beq	.L2
+  60:MouseWheel.c  ****     {
+  61:MouseWheel.c  ****         // Phasen haben sich geändert -> Counter entsprechend anpassen
+  62:MouseWheel.c  ****         mbMouseWheelPosition += bPhaseToDelta[(bLastPhase<<2) | bCurPhase];
+  69              		.loc 1 62 0
+  70 0026 234B     		ldr	r3, .L7
+  71 0028 1B78     		ldrb	r3, [r3]
+  72 002a 9A00     		lsls	r2, r3, #2
+  73 002c FB1D     		adds	r3, r7, #7
+  74 002e 1B78     		ldrb	r3, [r3]
+  75 0030 1343     		orrs	r3, r2
+  76 0032 214A     		ldr	r2, .L7+4
+  77 0034 D356     		ldrsb	r3, [r2, r3]
+  78 0036 DAB2     		uxtb	r2, r3
+  79 0038 204B     		ldr	r3, .L7+8
+  80 003a 1B78     		ldrb	r3, [r3]
+  81 003c DBB2     		uxtb	r3, r3
+  82 003e D318     		adds	r3, r2, r3
+  83 0040 DAB2     		uxtb	r2, r3
+  84 0042 1E4B     		ldr	r3, .L7+8
+  85 0044 1A70     		strb	r2, [r3]
+  63:MouseWheel.c  ****         bLastPhase = bCurPhase;
+  86              		.loc 1 63 0
+  87 0046 1B4B     		ldr	r3, .L7
+  88 0048 FA1D     		adds	r2, r7, #7
+  89 004a 1278     		ldrb	r2, [r2]
+  90 004c 1A70     		strb	r2, [r3]
+  91              	.L2:
+  64:MouseWheel.c  ****     }
+  65:MouseWheel.c  ****     
+  66:MouseWheel.c  ****     static uint8 uiCounter=8;
+  67:MouseWheel.c  ****     uiCounter--;
+  92              		.loc 1 67 0
+  93 004e 1C4B     		ldr	r3, .L7+12
+  94 0050 1B78     		ldrb	r3, [r3]
+  95 0052 013B     		subs	r3, r3, #1
+  96 0054 DAB2     		uxtb	r2, r3
+  97 0056 1A4B     		ldr	r3, .L7+12
+  98 0058 1A70     		strb	r2, [r3]
+  68:MouseWheel.c  ****     
+  69:MouseWheel.c  ****     if (uiCounter==0)
+  99              		.loc 1 69 0
+ 100 005a 194B     		ldr	r3, .L7+12
+ 101 005c 1B78     		ldrb	r3, [r3]
+ 102 005e 002B     		cmp	r3, #0
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 4
+
+
+ 103 0060 24D1     		bne	.L6
+  70:MouseWheel.c  ****     {
+  71:MouseWheel.c  ****         uiCounter = 8;
+ 104              		.loc 1 71 0
+ 105 0062 174B     		ldr	r3, .L7+12
+ 106 0064 0822     		movs	r2, #8
+ 107 0066 1A70     		strb	r2, [r3]
+  72:MouseWheel.c  ****         mbCurrentKeys = 0;
+ 108              		.loc 1 72 0
+ 109 0068 164B     		ldr	r3, .L7+16
+ 110 006a 0022     		movs	r2, #0
+ 111 006c 1A70     		strb	r2, [r3]
+  73:MouseWheel.c  ****         if (Left_Button_Read() == 0)
+ 112              		.loc 1 73 0
+ 113 006e FFF7FEFF 		bl	Left_Button_Read
+ 114 0072 031E     		subs	r3, r0, #0
+ 115 0074 02D1     		bne	.L4
+  74:MouseWheel.c  ****             mbCurrentKeys = 1;
+ 116              		.loc 1 74 0
+ 117 0076 134B     		ldr	r3, .L7+16
+ 118 0078 0122     		movs	r2, #1
+ 119 007a 1A70     		strb	r2, [r3]
+ 120              	.L4:
+  75:MouseWheel.c  ****         if (Mid_Button_Read() == 0)
+ 121              		.loc 1 75 0
+ 122 007c FFF7FEFF 		bl	Mid_Button_Read
+ 123 0080 031E     		subs	r3, r0, #0
+ 124 0082 07D1     		bne	.L5
+  76:MouseWheel.c  ****             mbCurrentKeys |= 2;
+ 125              		.loc 1 76 0
+ 126 0084 0F4B     		ldr	r3, .L7+16
+ 127 0086 1B78     		ldrb	r3, [r3]
+ 128 0088 DBB2     		uxtb	r3, r3
+ 129 008a 0222     		movs	r2, #2
+ 130 008c 1343     		orrs	r3, r2
+ 131 008e DAB2     		uxtb	r2, r3
+ 132 0090 0C4B     		ldr	r3, .L7+16
+ 133 0092 1A70     		strb	r2, [r3]
+ 134              	.L5:
+  77:MouseWheel.c  ****         if (Right_Button_Read() == 0)
+ 135              		.loc 1 77 0
+ 136 0094 FFF7FEFF 		bl	Right_Button_Read
+ 137 0098 031E     		subs	r3, r0, #0
+ 138 009a 07D1     		bne	.L6
+  78:MouseWheel.c  ****             mbCurrentKeys |= 4;    
+ 139              		.loc 1 78 0
+ 140 009c 094B     		ldr	r3, .L7+16
+ 141 009e 1B78     		ldrb	r3, [r3]
+ 142 00a0 DBB2     		uxtb	r3, r3
+ 143 00a2 0422     		movs	r2, #4
+ 144 00a4 1343     		orrs	r3, r2
+ 145 00a6 DAB2     		uxtb	r2, r3
+ 146 00a8 064B     		ldr	r3, .L7+16
+ 147 00aa 1A70     		strb	r2, [r3]
+ 148              	.L6:
+  79:MouseWheel.c  ****     }
+  80:MouseWheel.c  **** }
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 5
+
+
+ 149              		.loc 1 80 0
+ 150 00ac C046     		nop
+ 151 00ae BD46     		mov	sp, r7
+ 152 00b0 03B0     		add	sp, sp, #12
+ 153              		@ sp needed
+ 154 00b2 90BD     		pop	{r4, r7, pc}
+ 155              	.L8:
+ 156              		.align	2
+ 157              	.L7:
+ 158 00b4 02000000 		.word	bLastPhase.7611
+ 159 00b8 00000000 		.word	bPhaseToDelta.7610
+ 160 00bc 00000000 		.word	mbMouseWheelPosition
+ 161 00c0 00000000 		.word	uiCounter.7613
+ 162 00c4 00000000 		.word	mbCurrentKeys
+ 163              		.cfi_endproc
+ 164              	.LFE35:
+ 165              		.size	MouseWheel_ISR, .-MouseWheel_ISR
+ 166              		.section	.text.MouseWheel_Start,"ax",%progbits
+ 167              		.align	2
+ 168              		.global	MouseWheel_Start
+ 169              		.code	16
+ 170              		.thumb_func
+ 171              		.type	MouseWheel_Start, %function
+ 172              	MouseWheel_Start:
+ 173              	.LFB36:
+  81:MouseWheel.c  **** 
+  82:MouseWheel.c  **** void  MouseWheel_Start(void)
+  83:MouseWheel.c  **** {
+ 174              		.loc 1 83 0
+ 175              		.cfi_startproc
+ 176              		@ args = 0, pretend = 0, frame = 0
+ 177              		@ frame_needed = 1, uses_anonymous_args = 0
+ 178 0000 80B5     		push	{r7, lr}
+ 179              		.cfi_def_cfa_offset 8
+ 180              		.cfi_offset 7, -8
+ 181              		.cfi_offset 14, -4
+ 182 0002 00AF     		add	r7, sp, #0
+ 183              		.cfi_def_cfa_register 7
+  84:MouseWheel.c  ****     WHEEL_LED_ON;
+ 184              		.loc 1 84 0
+ 185 0004 0620     		movs	r0, #6
+ 186 0006 FFF7FEFF 		bl	Wheel_LED_SetDriveMode
+  85:MouseWheel.c  ****     //PWM_RestoreConfig();
+  86:MouseWheel.c  ****     //PWM_Enable();
+  87:MouseWheel.c  ****     Clock_1_Start();
+ 187              		.loc 1 87 0
+ 188 000a FF20     		movs	r0, #255
+ 189 000c FFF7FEFF 		bl	Clock_1_StartEx
+  88:MouseWheel.c  ****     PWM_Start();
+ 190              		.loc 1 88 0
+ 191 0010 FFF7FEFF 		bl	PWM_Start
+  89:MouseWheel.c  ****     isr_Wheel_ClearPending();
+ 192              		.loc 1 89 0
+ 193 0014 FFF7FEFF 		bl	isr_Wheel_ClearPending
+  90:MouseWheel.c  ****     isr_Wheel_StartEx(MouseWheel_ISR);  
+ 194              		.loc 1 90 0
+ 195 0018 044B     		ldr	r3, .L10
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 6
+
+
+ 196 001a 1800     		movs	r0, r3
+ 197 001c FFF7FEFF 		bl	isr_Wheel_StartEx
+  91:MouseWheel.c  ****     GREEN_ON;
+ 198              		.loc 1 91 0
+ 199 0020 0620     		movs	r0, #6
+ 200 0022 FFF7FEFF 		bl	GREEN_SetDriveMode
+  92:MouseWheel.c  **** }
+ 201              		.loc 1 92 0
+ 202 0026 C046     		nop
+ 203 0028 BD46     		mov	sp, r7
+ 204              		@ sp needed
+ 205 002a 80BD     		pop	{r7, pc}
+ 206              	.L11:
+ 207              		.align	2
+ 208              	.L10:
+ 209 002c 00000000 		.word	MouseWheel_ISR
+ 210              		.cfi_endproc
+ 211              	.LFE36:
+ 212              		.size	MouseWheel_Start, .-MouseWheel_Start
+ 213              		.section	.text.MouseWheel_Stop,"ax",%progbits
+ 214              		.align	2
+ 215              		.global	MouseWheel_Stop
+ 216              		.code	16
+ 217              		.thumb_func
+ 218              		.type	MouseWheel_Stop, %function
+ 219              	MouseWheel_Stop:
+ 220              	.LFB37:
+  93:MouseWheel.c  **** 
+  94:MouseWheel.c  **** void  MouseWheel_Stop(void)
+  95:MouseWheel.c  **** {
+ 221              		.loc 1 95 0
+ 222              		.cfi_startproc
+ 223              		@ args = 0, pretend = 0, frame = 0
+ 224              		@ frame_needed = 1, uses_anonymous_args = 0
+ 225 0000 80B5     		push	{r7, lr}
+ 226              		.cfi_def_cfa_offset 8
+ 227              		.cfi_offset 7, -8
+ 228              		.cfi_offset 14, -4
+ 229 0002 00AF     		add	r7, sp, #0
+ 230              		.cfi_def_cfa_register 7
+  96:MouseWheel.c  ****     WHEEL_LED_OFF;
+ 231              		.loc 1 96 0
+ 232 0004 0020     		movs	r0, #0
+ 233 0006 FFF7FEFF 		bl	Wheel_LED_SetDriveMode
+  97:MouseWheel.c  ****     PWM_Stop();
+ 234              		.loc 1 97 0
+ 235 000a FFF7FEFF 		bl	PWM_Stop
+  98:MouseWheel.c  ****     GREEN_OFF;
+ 236              		.loc 1 98 0
+ 237 000e 0020     		movs	r0, #0
+ 238 0010 FFF7FEFF 		bl	GREEN_SetDriveMode
+  99:MouseWheel.c  **** }
+ 239              		.loc 1 99 0
+ 240 0014 C046     		nop
+ 241 0016 BD46     		mov	sp, r7
+ 242              		@ sp needed
+ 243 0018 80BD     		pop	{r7, pc}
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 7
+
+
+ 244              		.cfi_endproc
+ 245              	.LFE37:
+ 246              		.size	MouseWheel_Stop, .-MouseWheel_Stop
+ 247 001a C046     		.section	.text.MouseWheel_GetPosition,"ax",%progbits
+ 248              		.align	2
+ 249              		.global	MouseWheel_GetPosition
+ 250              		.code	16
+ 251              		.thumb_func
+ 252              		.type	MouseWheel_GetPosition, %function
+ 253              	MouseWheel_GetPosition:
+ 254              	.LFB38:
+ 100:MouseWheel.c  **** 
+ 101:MouseWheel.c  **** uint8 MouseWheel_GetPosition(void)
+ 102:MouseWheel.c  **** {
+ 255              		.loc 1 102 0
+ 256              		.cfi_startproc
+ 257              		@ args = 0, pretend = 0, frame = 0
+ 258              		@ frame_needed = 1, uses_anonymous_args = 0
+ 259 0000 80B5     		push	{r7, lr}
+ 260              		.cfi_def_cfa_offset 8
+ 261              		.cfi_offset 7, -8
+ 262              		.cfi_offset 14, -4
+ 263 0002 00AF     		add	r7, sp, #0
+ 264              		.cfi_def_cfa_register 7
+ 103:MouseWheel.c  ****     return mbMouseWheelPosition;
+ 265              		.loc 1 103 0
+ 266 0004 024B     		ldr	r3, .L15
+ 267 0006 1B78     		ldrb	r3, [r3]
+ 268 0008 DBB2     		uxtb	r3, r3
+ 104:MouseWheel.c  **** }
+ 269              		.loc 1 104 0
+ 270 000a 1800     		movs	r0, r3
+ 271 000c BD46     		mov	sp, r7
+ 272              		@ sp needed
+ 273 000e 80BD     		pop	{r7, pc}
+ 274              	.L16:
+ 275              		.align	2
+ 276              	.L15:
+ 277 0010 00000000 		.word	mbMouseWheelPosition
+ 278              		.cfi_endproc
+ 279              	.LFE38:
+ 280              		.size	MouseWheel_GetPosition, .-MouseWheel_GetPosition
+ 281              		.section	.text.MouseWheel_GetKeys,"ax",%progbits
+ 282              		.align	2
+ 283              		.global	MouseWheel_GetKeys
+ 284              		.code	16
+ 285              		.thumb_func
+ 286              		.type	MouseWheel_GetKeys, %function
+ 287              	MouseWheel_GetKeys:
+ 288              	.LFB39:
+ 105:MouseWheel.c  **** 
+ 106:MouseWheel.c  **** uint8 MouseWheel_GetKeys(void)
+ 107:MouseWheel.c  **** {
+ 289              		.loc 1 107 0
+ 290              		.cfi_startproc
+ 291              		@ args = 0, pretend = 0, frame = 0
+ 292              		@ frame_needed = 1, uses_anonymous_args = 0
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 8
+
+
+ 293 0000 80B5     		push	{r7, lr}
+ 294              		.cfi_def_cfa_offset 8
+ 295              		.cfi_offset 7, -8
+ 296              		.cfi_offset 14, -4
+ 297 0002 00AF     		add	r7, sp, #0
+ 298              		.cfi_def_cfa_register 7
+ 108:MouseWheel.c  ****     return mbCurrentKeys;
+ 299              		.loc 1 108 0
+ 300 0004 024B     		ldr	r3, .L19
+ 301 0006 1B78     		ldrb	r3, [r3]
+ 302 0008 DBB2     		uxtb	r3, r3
+ 109:MouseWheel.c  **** }
+ 303              		.loc 1 109 0
+ 304 000a 1800     		movs	r0, r3
+ 305 000c BD46     		mov	sp, r7
+ 306              		@ sp needed
+ 307 000e 80BD     		pop	{r7, pc}
+ 308              	.L20:
+ 309              		.align	2
+ 310              	.L19:
+ 311 0010 00000000 		.word	mbCurrentKeys
+ 312              		.cfi_endproc
+ 313              	.LFE39:
+ 314              		.size	MouseWheel_GetKeys, .-MouseWheel_GetKeys
+ 315              		.bss
+ 316              	bLastPhase.7611:
+ 317 0002 00       		.space	1
+ 318              		.section	.rodata
+ 319              		.align	2
+ 320              		.type	bPhaseToDelta.7610, %object
+ 321              		.size	bPhaseToDelta.7610, 16
+ 322              	bPhaseToDelta.7610:
+ 323 0000 00       		.byte	0
+ 324 0001 01       		.byte	1
+ 325 0002 FF       		.byte	-1
+ 326 0003 00       		.byte	0
+ 327 0004 FF       		.byte	-1
+ 328 0005 00       		.byte	0
+ 329 0006 00       		.byte	0
+ 330 0007 01       		.byte	1
+ 331 0008 01       		.byte	1
+ 332 0009 00       		.byte	0
+ 333 000a 00       		.byte	0
+ 334 000b FF       		.byte	-1
+ 335 000c 00       		.byte	0
+ 336 000d FF       		.byte	-1
+ 337 000e 01       		.byte	1
+ 338 000f 00       		.byte	0
+ 339              		.data
+ 340              		.type	uiCounter.7613, %object
+ 341              		.size	uiCounter.7613, 1
+ 342              	uiCounter.7613:
+ 343 0000 08       		.byte	8
+ 344              		.text
+ 345              	.Letext0:
+ 346              		.file 2 "Generated_Source\\PSoC4/cytypes.h"
+ 347              		.file 3 "Generated_Source\\PSoC4/BLE_Stack.h"
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 9
+
+
+ 348              		.section	.debug_info,"",%progbits
+ 349              	.Ldebug_info0:
+ 350 0000 51030000 		.4byte	0x351
+ 351 0004 0400     		.2byte	0x4
+ 352 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 353 000a 04       		.byte	0x4
+ 354 000b 01       		.uleb128 0x1
+ 355 000c 1F040000 		.4byte	.LASF99
+ 356 0010 0C       		.byte	0xc
+ 357 0011 98020000 		.4byte	.LASF100
+ 358 0015 23080000 		.4byte	.LASF101
+ 359 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 360 001d 00000000 		.4byte	0
+ 361 0021 00000000 		.4byte	.Ldebug_line0
+ 362 0025 02       		.uleb128 0x2
+ 363 0026 01       		.byte	0x1
+ 364 0027 06       		.byte	0x6
+ 365 0028 99050000 		.4byte	.LASF0
+ 366 002c 02       		.uleb128 0x2
+ 367 002d 01       		.byte	0x1
+ 368 002e 08       		.byte	0x8
+ 369 002f 2F050000 		.4byte	.LASF1
+ 370 0033 02       		.uleb128 0x2
+ 371 0034 02       		.byte	0x2
+ 372 0035 05       		.byte	0x5
+ 373 0036 AF000000 		.4byte	.LASF2
+ 374 003a 02       		.uleb128 0x2
+ 375 003b 02       		.byte	0x2
+ 376 003c 07       		.byte	0x7
+ 377 003d CC060000 		.4byte	.LASF3
+ 378 0041 02       		.uleb128 0x2
+ 379 0042 04       		.byte	0x4
+ 380 0043 05       		.byte	0x5
+ 381 0044 4B030000 		.4byte	.LASF4
+ 382 0048 02       		.uleb128 0x2
+ 383 0049 04       		.byte	0x4
+ 384 004a 07       		.byte	0x7
+ 385 004b 2A060000 		.4byte	.LASF5
+ 386 004f 02       		.uleb128 0x2
+ 387 0050 08       		.byte	0x8
+ 388 0051 05       		.byte	0x5
+ 389 0052 26010000 		.4byte	.LASF6
+ 390 0056 02       		.uleb128 0x2
+ 391 0057 08       		.byte	0x8
+ 392 0058 07       		.byte	0x7
+ 393 0059 0E030000 		.4byte	.LASF7
+ 394 005d 03       		.uleb128 0x3
+ 395 005e 04       		.byte	0x4
+ 396 005f 05       		.byte	0x5
+ 397 0060 696E7400 		.ascii	"int\000"
+ 398 0064 02       		.uleb128 0x2
+ 399 0065 04       		.byte	0x4
+ 400 0066 07       		.byte	0x7
+ 401 0067 02060000 		.4byte	.LASF8
+ 402 006b 04       		.uleb128 0x4
+ 403 006c 68070000 		.4byte	.LASF9
+ 404 0070 02       		.byte	0x2
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 10
+
+
+ 405 0071 E401     		.2byte	0x1e4
+ 406 0073 2C000000 		.4byte	0x2c
+ 407 0077 04       		.uleb128 0x4
+ 408 0078 D4070000 		.4byte	.LASF10
+ 409 007c 02       		.byte	0x2
+ 410 007d E601     		.2byte	0x1e6
+ 411 007f 48000000 		.4byte	0x48
+ 412 0083 04       		.uleb128 0x4
+ 413 0084 25030000 		.4byte	.LASF11
+ 414 0088 02       		.byte	0x2
+ 415 0089 E701     		.2byte	0x1e7
+ 416 008b 25000000 		.4byte	0x25
+ 417 008f 02       		.uleb128 0x2
+ 418 0090 04       		.byte	0x4
+ 419 0091 04       		.byte	0x4
+ 420 0092 A5020000 		.4byte	.LASF12
+ 421 0096 02       		.uleb128 0x2
+ 422 0097 08       		.byte	0x8
+ 423 0098 04       		.byte	0x4
+ 424 0099 1C080000 		.4byte	.LASF13
+ 425 009d 02       		.uleb128 0x2
+ 426 009e 01       		.byte	0x1
+ 427 009f 08       		.byte	0x8
+ 428 00a0 47070000 		.4byte	.LASF14
+ 429 00a4 05       		.uleb128 0x5
+ 430 00a5 6B000000 		.4byte	0x6b
+ 431 00a9 02       		.uleb128 0x2
+ 432 00aa 08       		.byte	0x8
+ 433 00ab 04       		.byte	0x4
+ 434 00ac EF040000 		.4byte	.LASF15
+ 435 00b0 02       		.uleb128 0x2
+ 436 00b1 04       		.byte	0x4
+ 437 00b2 07       		.byte	0x7
+ 438 00b3 F1000000 		.4byte	.LASF16
+ 439 00b7 06       		.uleb128 0x6
+ 440 00b8 01       		.byte	0x1
+ 441 00b9 2C000000 		.4byte	0x2c
+ 442 00bd 03       		.byte	0x3
+ 443 00be 3501     		.2byte	0x135
+ 444 00c0 75020000 		.4byte	0x275
+ 445 00c4 07       		.uleb128 0x7
+ 446 00c5 42020000 		.4byte	.LASF17
+ 447 00c9 00       		.byte	0
+ 448 00ca 07       		.uleb128 0x7
+ 449 00cb 6A010000 		.4byte	.LASF18
+ 450 00cf 01       		.byte	0x1
+ 451 00d0 07       		.uleb128 0x7
+ 452 00d1 AF090000 		.4byte	.LASF19
+ 453 00d5 02       		.byte	0x2
+ 454 00d6 07       		.uleb128 0x7
+ 455 00d7 D2080000 		.4byte	.LASF20
+ 456 00db 03       		.byte	0x3
+ 457 00dc 07       		.uleb128 0x7
+ 458 00dd 34010000 		.4byte	.LASF21
+ 459 00e1 04       		.byte	0x4
+ 460 00e2 07       		.uleb128 0x7
+ 461 00e3 DD030000 		.4byte	.LASF22
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 11
+
+
+ 462 00e7 05       		.byte	0x5
+ 463 00e8 07       		.uleb128 0x7
+ 464 00e9 48000000 		.4byte	.LASF23
+ 465 00ed 06       		.byte	0x6
+ 466 00ee 07       		.uleb128 0x7
+ 467 00ef 28090000 		.4byte	.LASF24
+ 468 00f3 20       		.byte	0x20
+ 469 00f4 07       		.uleb128 0x7
+ 470 00f5 3C060000 		.4byte	.LASF25
+ 471 00f9 21       		.byte	0x21
+ 472 00fa 07       		.uleb128 0x7
+ 473 00fb 00000000 		.4byte	.LASF26
+ 474 00ff 22       		.byte	0x22
+ 475 0100 07       		.uleb128 0x7
+ 476 0101 F9030000 		.4byte	.LASF27
+ 477 0105 23       		.byte	0x23
+ 478 0106 07       		.uleb128 0x7
+ 479 0107 E6050000 		.4byte	.LASF28
+ 480 010b 24       		.byte	0x24
+ 481 010c 07       		.uleb128 0x7
+ 482 010d B9000000 		.4byte	.LASF29
+ 483 0111 25       		.byte	0x25
+ 484 0112 07       		.uleb128 0x7
+ 485 0113 94030000 		.4byte	.LASF30
+ 486 0117 26       		.byte	0x26
+ 487 0118 07       		.uleb128 0x7
+ 488 0119 75030000 		.4byte	.LASF31
+ 489 011d 27       		.byte	0x27
+ 490 011e 07       		.uleb128 0x7
+ 491 011f 9C0A0000 		.4byte	.LASF32
+ 492 0123 28       		.byte	0x28
+ 493 0124 07       		.uleb128 0x7
+ 494 0125 74060000 		.4byte	.LASF33
+ 495 0129 29       		.byte	0x29
+ 496 012a 07       		.uleb128 0x7
+ 497 012b F7060000 		.4byte	.LASF34
+ 498 012f 2A       		.byte	0x2a
+ 499 0130 07       		.uleb128 0x7
+ 500 0131 E5090000 		.4byte	.LASF35
+ 501 0135 2B       		.byte	0x2b
+ 502 0136 07       		.uleb128 0x7
+ 503 0137 DE010000 		.4byte	.LASF36
+ 504 013b 2C       		.byte	0x2c
+ 505 013c 07       		.uleb128 0x7
+ 506 013d C4020000 		.4byte	.LASF37
+ 507 0141 2D       		.byte	0x2d
+ 508 0142 07       		.uleb128 0x7
+ 509 0143 8B000000 		.4byte	.LASF38
+ 510 0147 2E       		.byte	0x2e
+ 511 0148 07       		.uleb128 0x7
+ 512 0149 F40A0000 		.4byte	.LASF39
+ 513 014d 2F       		.byte	0x2f
+ 514 014e 07       		.uleb128 0x7
+ 515 014f FA000000 		.4byte	.LASF40
+ 516 0153 30       		.byte	0x30
+ 517 0154 07       		.uleb128 0x7
+ 518 0155 CB040000 		.4byte	.LASF41
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 12
+
+
+ 519 0159 31       		.byte	0x31
+ 520 015a 07       		.uleb128 0x7
+ 521 015b ED020000 		.4byte	.LASF42
+ 522 015f 32       		.byte	0x32
+ 523 0160 07       		.uleb128 0x7
+ 524 0161 20070000 		.4byte	.LASF43
+ 525 0165 33       		.byte	0x33
+ 526 0166 07       		.uleb128 0x7
+ 527 0167 91060000 		.4byte	.LASF44
+ 528 016b 34       		.byte	0x34
+ 529 016c 07       		.uleb128 0x7
+ 530 016d 8D080000 		.4byte	.LASF45
+ 531 0171 35       		.byte	0x35
+ 532 0172 07       		.uleb128 0x7
+ 533 0173 2A030000 		.4byte	.LASF46
+ 534 0177 36       		.byte	0x36
+ 535 0178 07       		.uleb128 0x7
+ 536 0179 7D010000 		.4byte	.LASF47
+ 537 017d 37       		.byte	0x37
+ 538 017e 07       		.uleb128 0x7
+ 539 017f 61000000 		.4byte	.LASF48
+ 540 0183 40       		.byte	0x40
+ 541 0184 07       		.uleb128 0x7
+ 542 0185 0F060000 		.4byte	.LASF49
+ 543 0189 41       		.byte	0x41
+ 544 018a 07       		.uleb128 0x7
+ 545 018b D3000000 		.4byte	.LASF50
+ 546 018f 42       		.byte	0x42
+ 547 0190 07       		.uleb128 0x7
+ 548 0191 B2010000 		.4byte	.LASF51
+ 549 0195 43       		.byte	0x43
+ 550 0196 07       		.uleb128 0x7
+ 551 0197 91090000 		.4byte	.LASF52
+ 552 019b 44       		.byte	0x44
+ 553 019c 07       		.uleb128 0x7
+ 554 019d 4C090000 		.4byte	.LASF53
+ 555 01a1 45       		.byte	0x45
+ 556 01a2 07       		.uleb128 0x7
+ 557 01a3 49010000 		.4byte	.LASF54
+ 558 01a7 46       		.byte	0x46
+ 559 01a8 07       		.uleb128 0x7
+ 560 01a9 7B050000 		.4byte	.LASF55
+ 561 01ad 47       		.byte	0x47
+ 562 01ae 07       		.uleb128 0x7
+ 563 01af BF050000 		.4byte	.LASF56
+ 564 01b3 48       		.byte	0x48
+ 565 01b4 07       		.uleb128 0x7
+ 566 01b5 AB020000 		.4byte	.LASF57
+ 567 01b9 49       		.byte	0x49
+ 568 01ba 07       		.uleb128 0x7
+ 569 01bb 8D070000 		.4byte	.LASF58
+ 570 01bf 4A       		.byte	0x4a
+ 571 01c0 07       		.uleb128 0x7
+ 572 01c1 02020000 		.4byte	.LASF59
+ 573 01c5 4B       		.byte	0x4b
+ 574 01c6 07       		.uleb128 0x7
+ 575 01c7 A5050000 		.4byte	.LASF60
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 13
+
+
+ 576 01cb 4C       		.byte	0x4c
+ 577 01cc 07       		.uleb128 0x7
+ 578 01cd 2E000000 		.4byte	.LASF61
+ 579 01d1 4D       		.byte	0x4d
+ 580 01d2 07       		.uleb128 0x7
+ 581 01d3 73090000 		.4byte	.LASF62
+ 582 01d7 4E       		.byte	0x4e
+ 583 01d8 07       		.uleb128 0x7
+ 584 01d9 3D050000 		.4byte	.LASF63
+ 585 01dd 4F       		.byte	0x4f
+ 586 01de 07       		.uleb128 0x7
+ 587 01df 7D0A0000 		.4byte	.LASF64
+ 588 01e3 50       		.byte	0x50
+ 589 01e4 07       		.uleb128 0x7
+ 590 01e5 B5070000 		.4byte	.LASF65
+ 591 01e9 51       		.byte	0x51
+ 592 01ea 07       		.uleb128 0x7
+ 593 01eb BC030000 		.4byte	.LASF66
+ 594 01ef 52       		.byte	0x52
+ 595 01f0 07       		.uleb128 0x7
+ 596 01f1 54030000 		.4byte	.LASF67
+ 597 01f5 53       		.byte	0x53
+ 598 01f6 07       		.uleb128 0x7
+ 599 01f7 21020000 		.4byte	.LASF68
+ 600 01fb 54       		.byte	0x54
+ 601 01fc 07       		.uleb128 0x7
+ 602 01fd BE0A0000 		.4byte	.LASF69
+ 603 0201 55       		.byte	0x55
+ 604 0202 07       		.uleb128 0x7
+ 605 0203 4C0A0000 		.4byte	.LASF70
+ 606 0207 56       		.byte	0x56
+ 607 0208 07       		.uleb128 0x7
+ 608 0209 230A0000 		.4byte	.LASF71
+ 609 020d 57       		.byte	0x57
+ 610 020e 07       		.uleb128 0x7
+ 611 020f A9060000 		.4byte	.LASF72
+ 612 0213 58       		.byte	0x58
+ 613 0214 07       		.uleb128 0x7
+ 614 0215 09050000 		.4byte	.LASF73
+ 615 0219 70       		.byte	0x70
+ 616 021a 07       		.uleb128 0x7
+ 617 021b 02090000 		.4byte	.LASF74
+ 618 021f 71       		.byte	0x71
+ 619 0220 07       		.uleb128 0x7
+ 620 0221 4C070000 		.4byte	.LASF75
+ 621 0225 72       		.byte	0x72
+ 622 0226 07       		.uleb128 0x7
+ 623 0227 59020000 		.4byte	.LASF76
+ 624 022b 73       		.byte	0x73
+ 625 022c 07       		.uleb128 0x7
+ 626 022d AD040000 		.4byte	.LASF77
+ 627 0231 74       		.byte	0x74
+ 628 0232 07       		.uleb128 0x7
+ 629 0233 53060000 		.4byte	.LASF78
+ 630 0237 75       		.byte	0x75
+ 631 0238 07       		.uleb128 0x7
+ 632 0239 77020000 		.4byte	.LASF79
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 14
+
+
+ 633 023d 76       		.byte	0x76
+ 634 023e 07       		.uleb128 0x7
+ 635 023f 6E070000 		.4byte	.LASF80
+ 636 0243 77       		.byte	0x77
+ 637 0244 07       		.uleb128 0x7
+ 638 0245 F9070000 		.4byte	.LASF81
+ 639 0249 78       		.byte	0x78
+ 640 024a 07       		.uleb128 0x7
+ 641 024b 6A080000 		.4byte	.LASF82
+ 642 024f 79       		.byte	0x79
+ 643 0250 07       		.uleb128 0x7
+ 644 0251 C1090000 		.4byte	.LASF83
+ 645 0255 7A       		.byte	0x7a
+ 646 0256 07       		.uleb128 0x7
+ 647 0257 DB070000 		.4byte	.LASF84
+ 648 025b FA       		.byte	0xfa
+ 649 025c 07       		.uleb128 0x7
+ 650 025d 5C050000 		.4byte	.LASF85
+ 651 0261 FB       		.byte	0xfb
+ 652 0262 07       		.uleb128 0x7
+ 653 0263 E20A0000 		.4byte	.LASF86
+ 654 0267 FC       		.byte	0xfc
+ 655 0268 07       		.uleb128 0x7
+ 656 0269 DF060000 		.4byte	.LASF87
+ 657 026d FD       		.byte	0xfd
+ 658 026e 07       		.uleb128 0x7
+ 659 026f 040A0000 		.4byte	.LASF88
+ 660 0273 FF       		.byte	0xff
+ 661 0274 00       		.byte	0
+ 662 0275 08       		.uleb128 0x8
+ 663 0276 6E0A0000 		.4byte	.LASF102
+ 664 027a 01       		.byte	0x1
+ 665 027b 19       		.byte	0x19
+ 666 027c 00000000 		.4byte	.LFB35
+ 667 0280 C8000000 		.4byte	.LFE35-.LFB35
+ 668 0284 01       		.uleb128 0x1
+ 669 0285 9C       		.byte	0x9c
+ 670 0286 CC020000 		.4byte	0x2cc
+ 671 028a 09       		.uleb128 0x9
+ 672 028b FB040000 		.4byte	.LASF89
+ 673 028f 01       		.byte	0x1
+ 674 0290 20       		.byte	0x20
+ 675 0291 E1020000 		.4byte	0x2e1
+ 676 0295 05       		.uleb128 0x5
+ 677 0296 03       		.byte	0x3
+ 678 0297 00000000 		.4byte	bPhaseToDelta.7610
+ 679 029b 09       		.uleb128 0x9
+ 680 029c 1B010000 		.4byte	.LASF90
+ 681 02a0 01       		.byte	0x1
+ 682 02a1 37       		.byte	0x37
+ 683 02a2 6B000000 		.4byte	0x6b
+ 684 02a6 05       		.uleb128 0x5
+ 685 02a7 03       		.byte	0x3
+ 686 02a8 02000000 		.4byte	bLastPhase.7611
+ 687 02ac 09       		.uleb128 0x9
+ 688 02ad AB070000 		.4byte	.LASF91
+ 689 02b1 01       		.byte	0x1
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 15
+
+
+ 690 02b2 39       		.byte	0x39
+ 691 02b3 6B000000 		.4byte	0x6b
+ 692 02b7 02       		.uleb128 0x2
+ 693 02b8 91       		.byte	0x91
+ 694 02b9 6F       		.sleb128 -17
+ 695 02ba 09       		.uleb128 0x9
+ 696 02bb 24000000 		.4byte	.LASF92
+ 697 02bf 01       		.byte	0x1
+ 698 02c0 42       		.byte	0x42
+ 699 02c1 6B000000 		.4byte	0x6b
+ 700 02c5 05       		.uleb128 0x5
+ 701 02c6 03       		.byte	0x3
+ 702 02c7 00000000 		.4byte	uiCounter.7613
+ 703 02cb 00       		.byte	0
+ 704 02cc 0A       		.uleb128 0xa
+ 705 02cd DC020000 		.4byte	0x2dc
+ 706 02d1 DC020000 		.4byte	0x2dc
+ 707 02d5 0B       		.uleb128 0xb
+ 708 02d6 B0000000 		.4byte	0xb0
+ 709 02da 0F       		.byte	0xf
+ 710 02db 00       		.byte	0
+ 711 02dc 0C       		.uleb128 0xc
+ 712 02dd 83000000 		.4byte	0x83
+ 713 02e1 0C       		.uleb128 0xc
+ 714 02e2 CC020000 		.4byte	0x2cc
+ 715 02e6 0D       		.uleb128 0xd
+ 716 02e7 120A0000 		.4byte	.LASF93
+ 717 02eb 01       		.byte	0x1
+ 718 02ec 52       		.byte	0x52
+ 719 02ed 00000000 		.4byte	.LFB36
+ 720 02f1 30000000 		.4byte	.LFE36-.LFB36
+ 721 02f5 01       		.uleb128 0x1
+ 722 02f6 9C       		.byte	0x9c
+ 723 02f7 0D       		.uleb128 0xd
+ 724 02f8 7B000000 		.4byte	.LASF94
+ 725 02fc 01       		.byte	0x1
+ 726 02fd 5E       		.byte	0x5e
+ 727 02fe 00000000 		.4byte	.LFB37
+ 728 0302 1A000000 		.4byte	.LFE37-.LFB37
+ 729 0306 01       		.uleb128 0x1
+ 730 0307 9C       		.byte	0x9c
+ 731 0308 0E       		.uleb128 0xe
+ 732 0309 EB080000 		.4byte	.LASF95
+ 733 030d 01       		.byte	0x1
+ 734 030e 65       		.byte	0x65
+ 735 030f 6B000000 		.4byte	0x6b
+ 736 0313 00000000 		.4byte	.LFB38
+ 737 0317 14000000 		.4byte	.LFE38-.LFB38
+ 738 031b 01       		.uleb128 0x1
+ 739 031c 9C       		.byte	0x9c
+ 740 031d 0E       		.uleb128 0xe
+ 741 031e BF080000 		.4byte	.LASF96
+ 742 0322 01       		.byte	0x1
+ 743 0323 6A       		.byte	0x6a
+ 744 0324 6B000000 		.4byte	0x6b
+ 745 0328 00000000 		.4byte	.LFB39
+ 746 032c 14000000 		.4byte	.LFE39-.LFB39
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 16
+
+
+ 747 0330 01       		.uleb128 0x1
+ 748 0331 9C       		.byte	0x9c
+ 749 0332 0F       		.uleb128 0xf
+ 750 0333 AA080000 		.4byte	.LASF97
+ 751 0337 01       		.byte	0x1
+ 752 0338 0F       		.byte	0xf
+ 753 0339 A4000000 		.4byte	0xa4
+ 754 033d 05       		.uleb128 0x5
+ 755 033e 03       		.byte	0x3
+ 756 033f 00000000 		.4byte	mbMouseWheelPosition
+ 757 0343 0F       		.uleb128 0xf
+ 758 0344 D0010000 		.4byte	.LASF98
+ 759 0348 01       		.byte	0x1
+ 760 0349 10       		.byte	0x10
+ 761 034a A4000000 		.4byte	0xa4
+ 762 034e 05       		.uleb128 0x5
+ 763 034f 03       		.byte	0x3
+ 764 0350 00000000 		.4byte	mbCurrentKeys
+ 765 0354 00       		.byte	0
+ 766              		.section	.debug_abbrev,"",%progbits
+ 767              	.Ldebug_abbrev0:
+ 768 0000 01       		.uleb128 0x1
+ 769 0001 11       		.uleb128 0x11
+ 770 0002 01       		.byte	0x1
+ 771 0003 25       		.uleb128 0x25
+ 772 0004 0E       		.uleb128 0xe
+ 773 0005 13       		.uleb128 0x13
+ 774 0006 0B       		.uleb128 0xb
+ 775 0007 03       		.uleb128 0x3
+ 776 0008 0E       		.uleb128 0xe
+ 777 0009 1B       		.uleb128 0x1b
+ 778 000a 0E       		.uleb128 0xe
+ 779 000b 55       		.uleb128 0x55
+ 780 000c 17       		.uleb128 0x17
+ 781 000d 11       		.uleb128 0x11
+ 782 000e 01       		.uleb128 0x1
+ 783 000f 10       		.uleb128 0x10
+ 784 0010 17       		.uleb128 0x17
+ 785 0011 00       		.byte	0
+ 786 0012 00       		.byte	0
+ 787 0013 02       		.uleb128 0x2
+ 788 0014 24       		.uleb128 0x24
+ 789 0015 00       		.byte	0
+ 790 0016 0B       		.uleb128 0xb
+ 791 0017 0B       		.uleb128 0xb
+ 792 0018 3E       		.uleb128 0x3e
+ 793 0019 0B       		.uleb128 0xb
+ 794 001a 03       		.uleb128 0x3
+ 795 001b 0E       		.uleb128 0xe
+ 796 001c 00       		.byte	0
+ 797 001d 00       		.byte	0
+ 798 001e 03       		.uleb128 0x3
+ 799 001f 24       		.uleb128 0x24
+ 800 0020 00       		.byte	0
+ 801 0021 0B       		.uleb128 0xb
+ 802 0022 0B       		.uleb128 0xb
+ 803 0023 3E       		.uleb128 0x3e
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 17
+
+
+ 804 0024 0B       		.uleb128 0xb
+ 805 0025 03       		.uleb128 0x3
+ 806 0026 08       		.uleb128 0x8
+ 807 0027 00       		.byte	0
+ 808 0028 00       		.byte	0
+ 809 0029 04       		.uleb128 0x4
+ 810 002a 16       		.uleb128 0x16
+ 811 002b 00       		.byte	0
+ 812 002c 03       		.uleb128 0x3
+ 813 002d 0E       		.uleb128 0xe
+ 814 002e 3A       		.uleb128 0x3a
+ 815 002f 0B       		.uleb128 0xb
+ 816 0030 3B       		.uleb128 0x3b
+ 817 0031 05       		.uleb128 0x5
+ 818 0032 49       		.uleb128 0x49
+ 819 0033 13       		.uleb128 0x13
+ 820 0034 00       		.byte	0
+ 821 0035 00       		.byte	0
+ 822 0036 05       		.uleb128 0x5
+ 823 0037 35       		.uleb128 0x35
+ 824 0038 00       		.byte	0
+ 825 0039 49       		.uleb128 0x49
+ 826 003a 13       		.uleb128 0x13
+ 827 003b 00       		.byte	0
+ 828 003c 00       		.byte	0
+ 829 003d 06       		.uleb128 0x6
+ 830 003e 04       		.uleb128 0x4
+ 831 003f 01       		.byte	0x1
+ 832 0040 0B       		.uleb128 0xb
+ 833 0041 0B       		.uleb128 0xb
+ 834 0042 49       		.uleb128 0x49
+ 835 0043 13       		.uleb128 0x13
+ 836 0044 3A       		.uleb128 0x3a
+ 837 0045 0B       		.uleb128 0xb
+ 838 0046 3B       		.uleb128 0x3b
+ 839 0047 05       		.uleb128 0x5
+ 840 0048 01       		.uleb128 0x1
+ 841 0049 13       		.uleb128 0x13
+ 842 004a 00       		.byte	0
+ 843 004b 00       		.byte	0
+ 844 004c 07       		.uleb128 0x7
+ 845 004d 28       		.uleb128 0x28
+ 846 004e 00       		.byte	0
+ 847 004f 03       		.uleb128 0x3
+ 848 0050 0E       		.uleb128 0xe
+ 849 0051 1C       		.uleb128 0x1c
+ 850 0052 0B       		.uleb128 0xb
+ 851 0053 00       		.byte	0
+ 852 0054 00       		.byte	0
+ 853 0055 08       		.uleb128 0x8
+ 854 0056 2E       		.uleb128 0x2e
+ 855 0057 01       		.byte	0x1
+ 856 0058 3F       		.uleb128 0x3f
+ 857 0059 19       		.uleb128 0x19
+ 858 005a 03       		.uleb128 0x3
+ 859 005b 0E       		.uleb128 0xe
+ 860 005c 3A       		.uleb128 0x3a
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 18
+
+
+ 861 005d 0B       		.uleb128 0xb
+ 862 005e 3B       		.uleb128 0x3b
+ 863 005f 0B       		.uleb128 0xb
+ 864 0060 27       		.uleb128 0x27
+ 865 0061 19       		.uleb128 0x19
+ 866 0062 11       		.uleb128 0x11
+ 867 0063 01       		.uleb128 0x1
+ 868 0064 12       		.uleb128 0x12
+ 869 0065 06       		.uleb128 0x6
+ 870 0066 40       		.uleb128 0x40
+ 871 0067 18       		.uleb128 0x18
+ 872 0068 9642     		.uleb128 0x2116
+ 873 006a 19       		.uleb128 0x19
+ 874 006b 01       		.uleb128 0x1
+ 875 006c 13       		.uleb128 0x13
+ 876 006d 00       		.byte	0
+ 877 006e 00       		.byte	0
+ 878 006f 09       		.uleb128 0x9
+ 879 0070 34       		.uleb128 0x34
+ 880 0071 00       		.byte	0
+ 881 0072 03       		.uleb128 0x3
+ 882 0073 0E       		.uleb128 0xe
+ 883 0074 3A       		.uleb128 0x3a
+ 884 0075 0B       		.uleb128 0xb
+ 885 0076 3B       		.uleb128 0x3b
+ 886 0077 0B       		.uleb128 0xb
+ 887 0078 49       		.uleb128 0x49
+ 888 0079 13       		.uleb128 0x13
+ 889 007a 02       		.uleb128 0x2
+ 890 007b 18       		.uleb128 0x18
+ 891 007c 00       		.byte	0
+ 892 007d 00       		.byte	0
+ 893 007e 0A       		.uleb128 0xa
+ 894 007f 01       		.uleb128 0x1
+ 895 0080 01       		.byte	0x1
+ 896 0081 49       		.uleb128 0x49
+ 897 0082 13       		.uleb128 0x13
+ 898 0083 01       		.uleb128 0x1
+ 899 0084 13       		.uleb128 0x13
+ 900 0085 00       		.byte	0
+ 901 0086 00       		.byte	0
+ 902 0087 0B       		.uleb128 0xb
+ 903 0088 21       		.uleb128 0x21
+ 904 0089 00       		.byte	0
+ 905 008a 49       		.uleb128 0x49
+ 906 008b 13       		.uleb128 0x13
+ 907 008c 2F       		.uleb128 0x2f
+ 908 008d 0B       		.uleb128 0xb
+ 909 008e 00       		.byte	0
+ 910 008f 00       		.byte	0
+ 911 0090 0C       		.uleb128 0xc
+ 912 0091 26       		.uleb128 0x26
+ 913 0092 00       		.byte	0
+ 914 0093 49       		.uleb128 0x49
+ 915 0094 13       		.uleb128 0x13
+ 916 0095 00       		.byte	0
+ 917 0096 00       		.byte	0
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 19
+
+
+ 918 0097 0D       		.uleb128 0xd
+ 919 0098 2E       		.uleb128 0x2e
+ 920 0099 00       		.byte	0
+ 921 009a 3F       		.uleb128 0x3f
+ 922 009b 19       		.uleb128 0x19
+ 923 009c 03       		.uleb128 0x3
+ 924 009d 0E       		.uleb128 0xe
+ 925 009e 3A       		.uleb128 0x3a
+ 926 009f 0B       		.uleb128 0xb
+ 927 00a0 3B       		.uleb128 0x3b
+ 928 00a1 0B       		.uleb128 0xb
+ 929 00a2 27       		.uleb128 0x27
+ 930 00a3 19       		.uleb128 0x19
+ 931 00a4 11       		.uleb128 0x11
+ 932 00a5 01       		.uleb128 0x1
+ 933 00a6 12       		.uleb128 0x12
+ 934 00a7 06       		.uleb128 0x6
+ 935 00a8 40       		.uleb128 0x40
+ 936 00a9 18       		.uleb128 0x18
+ 937 00aa 9642     		.uleb128 0x2116
+ 938 00ac 19       		.uleb128 0x19
+ 939 00ad 00       		.byte	0
+ 940 00ae 00       		.byte	0
+ 941 00af 0E       		.uleb128 0xe
+ 942 00b0 2E       		.uleb128 0x2e
+ 943 00b1 00       		.byte	0
+ 944 00b2 3F       		.uleb128 0x3f
+ 945 00b3 19       		.uleb128 0x19
+ 946 00b4 03       		.uleb128 0x3
+ 947 00b5 0E       		.uleb128 0xe
+ 948 00b6 3A       		.uleb128 0x3a
+ 949 00b7 0B       		.uleb128 0xb
+ 950 00b8 3B       		.uleb128 0x3b
+ 951 00b9 0B       		.uleb128 0xb
+ 952 00ba 27       		.uleb128 0x27
+ 953 00bb 19       		.uleb128 0x19
+ 954 00bc 49       		.uleb128 0x49
+ 955 00bd 13       		.uleb128 0x13
+ 956 00be 11       		.uleb128 0x11
+ 957 00bf 01       		.uleb128 0x1
+ 958 00c0 12       		.uleb128 0x12
+ 959 00c1 06       		.uleb128 0x6
+ 960 00c2 40       		.uleb128 0x40
+ 961 00c3 18       		.uleb128 0x18
+ 962 00c4 9742     		.uleb128 0x2117
+ 963 00c6 19       		.uleb128 0x19
+ 964 00c7 00       		.byte	0
+ 965 00c8 00       		.byte	0
+ 966 00c9 0F       		.uleb128 0xf
+ 967 00ca 34       		.uleb128 0x34
+ 968 00cb 00       		.byte	0
+ 969 00cc 03       		.uleb128 0x3
+ 970 00cd 0E       		.uleb128 0xe
+ 971 00ce 3A       		.uleb128 0x3a
+ 972 00cf 0B       		.uleb128 0xb
+ 973 00d0 3B       		.uleb128 0x3b
+ 974 00d1 0B       		.uleb128 0xb
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 20
+
+
+ 975 00d2 49       		.uleb128 0x49
+ 976 00d3 13       		.uleb128 0x13
+ 977 00d4 3F       		.uleb128 0x3f
+ 978 00d5 19       		.uleb128 0x19
+ 979 00d6 02       		.uleb128 0x2
+ 980 00d7 18       		.uleb128 0x18
+ 981 00d8 00       		.byte	0
+ 982 00d9 00       		.byte	0
+ 983 00da 00       		.byte	0
+ 984              		.section	.debug_aranges,"",%progbits
+ 985 0000 3C000000 		.4byte	0x3c
+ 986 0004 0200     		.2byte	0x2
+ 987 0006 00000000 		.4byte	.Ldebug_info0
+ 988 000a 04       		.byte	0x4
+ 989 000b 00       		.byte	0
+ 990 000c 0000     		.2byte	0
+ 991 000e 0000     		.2byte	0
+ 992 0010 00000000 		.4byte	.LFB35
+ 993 0014 C8000000 		.4byte	.LFE35-.LFB35
+ 994 0018 00000000 		.4byte	.LFB36
+ 995 001c 30000000 		.4byte	.LFE36-.LFB36
+ 996 0020 00000000 		.4byte	.LFB37
+ 997 0024 1A000000 		.4byte	.LFE37-.LFB37
+ 998 0028 00000000 		.4byte	.LFB38
+ 999 002c 14000000 		.4byte	.LFE38-.LFB38
+ 1000 0030 00000000 		.4byte	.LFB39
+ 1001 0034 14000000 		.4byte	.LFE39-.LFB39
+ 1002 0038 00000000 		.4byte	0
+ 1003 003c 00000000 		.4byte	0
+ 1004              		.section	.debug_ranges,"",%progbits
+ 1005              	.Ldebug_ranges0:
+ 1006 0000 00000000 		.4byte	.LFB35
+ 1007 0004 C8000000 		.4byte	.LFE35
+ 1008 0008 00000000 		.4byte	.LFB36
+ 1009 000c 30000000 		.4byte	.LFE36
+ 1010 0010 00000000 		.4byte	.LFB37
+ 1011 0014 1A000000 		.4byte	.LFE37
+ 1012 0018 00000000 		.4byte	.LFB38
+ 1013 001c 14000000 		.4byte	.LFE38
+ 1014 0020 00000000 		.4byte	.LFB39
+ 1015 0024 14000000 		.4byte	.LFE39
+ 1016 0028 00000000 		.4byte	0
+ 1017 002c 00000000 		.4byte	0
+ 1018              		.section	.debug_line,"",%progbits
+ 1019              	.Ldebug_line0:
+ 1020 0000 CD000000 		.section	.debug_str,"MS",%progbits,1
+ 1020      02005600 
+ 1020      00000201 
+ 1020      FB0E0D00 
+ 1020      01010101 
+ 1021              	.LASF26:
+ 1022 0000 4359424C 		.ascii	"CYBLE_EVT_GAP_PASSKEY_ENTRY_REQUEST\000"
+ 1022      455F4556 
+ 1022      545F4741 
+ 1022      505F5041 
+ 1022      53534B45 
+ 1023              	.LASF92:
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 21
+
+
+ 1024 0024 7569436F 		.ascii	"uiCounter\000"
+ 1024      756E7465 
+ 1024      7200
+ 1025              	.LASF61:
+ 1026 002e 4359424C 		.ascii	"CYBLE_EVT_GATTC_WRITE_RSP\000"
+ 1026      455F4556 
+ 1026      545F4741 
+ 1026      5454435F 
+ 1026      57524954 
+ 1027              	.LASF23:
+ 1028 0048 4359424C 		.ascii	"CYBLE_EVT_MEMORY_REQUEST\000"
+ 1028      455F4556 
+ 1028      545F4D45 
+ 1028      4D4F5259 
+ 1028      5F524551 
+ 1029              	.LASF48:
+ 1030 0061 4359424C 		.ascii	"CYBLE_EVT_GATTC_ERROR_RSP\000"
+ 1030      455F4556 
+ 1030      545F4741 
+ 1030      5454435F 
+ 1030      4552524F 
+ 1031              	.LASF94:
+ 1032 007b 4D6F7573 		.ascii	"MouseWheel_Stop\000"
+ 1032      65576865 
+ 1032      656C5F53 
+ 1032      746F7000 
+ 1033              	.LASF38:
+ 1034 008b 4359424C 		.ascii	"CYBLE_EVT_GAP_KEYPRESS_NOTIFICATION\000"
+ 1034      455F4556 
+ 1034      545F4741 
+ 1034      505F4B45 
+ 1034      59505245 
+ 1035              	.LASF2:
+ 1036 00af 73686F72 		.ascii	"short int\000"
+ 1036      7420696E 
+ 1036      7400
+ 1037              	.LASF29:
+ 1038 00b9 4359424C 		.ascii	"CYBLE_EVT_GAP_AUTH_FAILED\000"
+ 1038      455F4556 
+ 1038      545F4741 
+ 1038      505F4155 
+ 1038      54485F46 
+ 1039              	.LASF50:
+ 1040 00d3 4359424C 		.ascii	"CYBLE_EVT_GATT_DISCONNECT_IND\000"
+ 1040      455F4556 
+ 1040      545F4741 
+ 1040      54545F44 
+ 1040      4953434F 
+ 1041              	.LASF16:
+ 1042 00f1 73697A65 		.ascii	"sizetype\000"
+ 1042      74797065 
+ 1042      00
+ 1043              	.LASF40:
+ 1044 00fa 4359424C 		.ascii	"CYBLE_EVT_GAP_DATA_LENGTH_CHANGE\000"
+ 1044      455F4556 
+ 1044      545F4741 
+ 1044      505F4441 
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 22
+
+
+ 1044      54415F4C 
+ 1045              	.LASF90:
+ 1046 011b 624C6173 		.ascii	"bLastPhase\000"
+ 1046      74506861 
+ 1046      736500
+ 1047              	.LASF6:
+ 1048 0126 6C6F6E67 		.ascii	"long long int\000"
+ 1048      206C6F6E 
+ 1048      6720696E 
+ 1048      7400
+ 1049              	.LASF21:
+ 1050 0134 4359424C 		.ascii	"CYBLE_EVT_HCI_STATUS\000"
+ 1050      455F4556 
+ 1050      545F4843 
+ 1050      495F5354 
+ 1050      41545553 
+ 1051              	.LASF54:
+ 1052 0149 4359424C 		.ascii	"CYBLE_EVT_GATTC_READ_BY_TYPE_RSP\000"
+ 1052      455F4556 
+ 1052      545F4741 
+ 1052      5454435F 
+ 1052      52454144 
+ 1053              	.LASF18:
+ 1054 016a 4359424C 		.ascii	"CYBLE_EVT_STACK_ON\000"
+ 1054      455F4556 
+ 1054      545F5354 
+ 1054      41434B5F 
+ 1054      4F4E00
+ 1055              	.LASF47:
+ 1056 017d 4359424C 		.ascii	"CYBLE_EVT_GAP_SMP_LOC_P256_KEYS_GEN_AND_SET_COMPLET"
+ 1056      455F4556 
+ 1056      545F4741 
+ 1056      505F534D 
+ 1056      505F4C4F 
+ 1057 01b0 4500     		.ascii	"E\000"
+ 1058              	.LASF51:
+ 1059 01b2 4359424C 		.ascii	"CYBLE_EVT_GATTS_XCNHG_MTU_REQ\000"
+ 1059      455F4556 
+ 1059      545F4741 
+ 1059      5454535F 
+ 1059      58434E48 
+ 1060              	.LASF98:
+ 1061 01d0 6D624375 		.ascii	"mbCurrentKeys\000"
+ 1061      7272656E 
+ 1061      744B6579 
+ 1061      7300
+ 1062              	.LASF36:
+ 1063 01de 4359424C 		.ascii	"CYBLE_EVT_GAP_KEYINFO_EXCHNGE_CMPLT\000"
+ 1063      455F4556 
+ 1063      545F4741 
+ 1063      505F4B45 
+ 1063      59494E46 
+ 1064              	.LASF59:
+ 1065 0202 4359424C 		.ascii	"CYBLE_EVT_GATTC_READ_MULTI_RSP\000"
+ 1065      455F4556 
+ 1065      545F4741 
+ 1065      5454435F 
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 23
+
+
+ 1065      52454144 
+ 1066              	.LASF68:
+ 1067 0221 4359424C 		.ascii	"CYBLE_EVT_GATTS_HANDLE_VALUE_CNF\000"
+ 1067      455F4556 
+ 1067      545F4741 
+ 1067      5454535F 
+ 1067      48414E44 
+ 1068              	.LASF17:
+ 1069 0242 4359424C 		.ascii	"CYBLE_EVT_HOST_INVALID\000"
+ 1069      455F4556 
+ 1069      545F484F 
+ 1069      53545F49 
+ 1069      4E56414C 
+ 1070              	.LASF76:
+ 1071 0259 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_CONN_IND\000"
+ 1071      455F4556 
+ 1071      545F4C32 
+ 1071      4341505F 
+ 1071      43424643 
+ 1072              	.LASF79:
+ 1073 0277 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_DISCONN_CNF\000"
+ 1073      455F4556 
+ 1073      545F4C32 
+ 1073      4341505F 
+ 1073      43424643 
+ 1074              	.LASF100:
+ 1075 0298 4D6F7573 		.ascii	"MouseWheel.c\000"
+ 1075      65576865 
+ 1075      656C2E63 
+ 1075      00
+ 1076              	.LASF12:
+ 1077 02a5 666C6F61 		.ascii	"float\000"
+ 1077      7400
+ 1078              	.LASF57:
+ 1079 02ab 4359424C 		.ascii	"CYBLE_EVT_GATTC_READ_RSP\000"
+ 1079      455F4556 
+ 1079      545F4741 
+ 1079      5454435F 
+ 1079      52454144 
+ 1080              	.LASF37:
+ 1081 02c4 4359424C 		.ascii	"CYBLE_EVT_GAP_NUMERIC_COMPARISON_REQUEST\000"
+ 1081      455F4556 
+ 1081      545F4741 
+ 1081      505F4E55 
+ 1081      4D455249 
+ 1082              	.LASF42:
+ 1083 02ed 4359424C 		.ascii	"CYBLE_EVT_GAPC_DIRECT_ADV_REPORT\000"
+ 1083      455F4556 
+ 1083      545F4741 
+ 1083      50435F44 
+ 1083      49524543 
+ 1084              	.LASF7:
+ 1085 030e 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1085      206C6F6E 
+ 1085      6720756E 
+ 1085      7369676E 
+ 1085      65642069 
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 24
+
+
+ 1086              	.LASF11:
+ 1087 0325 696E7438 		.ascii	"int8\000"
+ 1087      00
+ 1088              	.LASF46:
+ 1089 032a 4359424C 		.ascii	"CYBLE_EVT_GAP_AUTH_REQ_REPLY_ERR\000"
+ 1089      455F4556 
+ 1089      545F4741 
+ 1089      505F4155 
+ 1089      54485F52 
+ 1090              	.LASF4:
+ 1091 034b 6C6F6E67 		.ascii	"long int\000"
+ 1091      20696E74 
+ 1091      00
+ 1092              	.LASF67:
+ 1093 0354 4359424C 		.ascii	"CYBLE_EVT_GATTC_HANDLE_VALUE_IND\000"
+ 1093      455F4556 
+ 1093      545F4741 
+ 1093      5454435F 
+ 1093      48414E44 
+ 1094              	.LASF31:
+ 1095 0375 4359424C 		.ascii	"CYBLE_EVT_GAP_DEVICE_CONNECTED\000"
+ 1095      455F4556 
+ 1095      545F4741 
+ 1095      505F4445 
+ 1095      56494345 
+ 1096              	.LASF30:
+ 1097 0394 4359424C 		.ascii	"CYBLE_EVT_GAPP_ADVERTISEMENT_START_STOP\000"
+ 1097      455F4556 
+ 1097      545F4741 
+ 1097      50505F41 
+ 1097      44564552 
+ 1098              	.LASF66:
+ 1099 03bc 4359424C 		.ascii	"CYBLE_EVT_GATTC_HANDLE_VALUE_NTF\000"
+ 1099      455F4556 
+ 1099      545F4741 
+ 1099      5454435F 
+ 1099      48414E44 
+ 1100              	.LASF22:
+ 1101 03dd 4359424C 		.ascii	"CYBLE_EVT_STACK_BUSY_STATUS\000"
+ 1101      455F4556 
+ 1101      545F5354 
+ 1101      41434B5F 
+ 1101      42555359 
+ 1102              	.LASF27:
+ 1103 03f9 4359424C 		.ascii	"CYBLE_EVT_GAP_PASSKEY_DISPLAY_REQUEST\000"
+ 1103      455F4556 
+ 1103      545F4741 
+ 1103      505F5041 
+ 1103      53534B45 
+ 1104              	.LASF99:
+ 1105 041f 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 1105      43313120 
+ 1105      352E342E 
+ 1105      31203230 
+ 1105      31363036 
+ 1106 0452 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0 -mthumb -g -O"
+ 1106      20726576 
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 25
+
+
+ 1106      6973696F 
+ 1106      6E203233 
+ 1106      37373135 
+ 1107 0485 30202D66 		.ascii	"0 -ffunction-sections -ffat-lto-objects\000"
+ 1107      66756E63 
+ 1107      74696F6E 
+ 1107      2D736563 
+ 1107      74696F6E 
+ 1108              	.LASF77:
+ 1109 04ad 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_CONN_CNF\000"
+ 1109      455F4556 
+ 1109      545F4C32 
+ 1109      4341505F 
+ 1109      43424643 
+ 1110              	.LASF41:
+ 1111 04cb 4359424C 		.ascii	"CYBLE_EVT_GAP_ENHANCE_CONN_COMPLETE\000"
+ 1111      455F4556 
+ 1111      545F4741 
+ 1111      505F454E 
+ 1111      48414E43 
+ 1112              	.LASF15:
+ 1113 04ef 6C6F6E67 		.ascii	"long double\000"
+ 1113      20646F75 
+ 1113      626C6500 
+ 1114              	.LASF89:
+ 1115 04fb 62506861 		.ascii	"bPhaseToDelta\000"
+ 1115      7365546F 
+ 1115      44656C74 
+ 1115      6100
+ 1116              	.LASF73:
+ 1117 0509 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CONN_PARAM_UPDATE_REQ\000"
+ 1117      455F4556 
+ 1117      545F4C32 
+ 1117      4341505F 
+ 1117      434F4E4E 
+ 1118              	.LASF1:
+ 1119 052f 756E7369 		.ascii	"unsigned char\000"
+ 1119      676E6564 
+ 1119      20636861 
+ 1119      7200
+ 1120              	.LASF63:
+ 1121 053d 4359424C 		.ascii	"CYBLE_EVT_GATTS_PREP_WRITE_REQ\000"
+ 1121      455F4556 
+ 1121      545F4741 
+ 1121      5454535F 
+ 1121      50524550 
+ 1122              	.LASF85:
+ 1123 055c 4359424C 		.ascii	"CYBLE_EVT_LE_PING_AUTH_TIMEOUT\000"
+ 1123      455F4556 
+ 1123      545F4C45 
+ 1123      5F50494E 
+ 1123      475F4155 
+ 1124              	.LASF55:
+ 1125 057b 4359424C 		.ascii	"CYBLE_EVT_GATTC_FIND_INFO_RSP\000"
+ 1125      455F4556 
+ 1125      545F4741 
+ 1125      5454435F 
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 26
+
+
+ 1125      46494E44 
+ 1126              	.LASF0:
+ 1127 0599 7369676E 		.ascii	"signed char\000"
+ 1127      65642063 
+ 1127      68617200 
+ 1128              	.LASF60:
+ 1129 05a5 4359424C 		.ascii	"CYBLE_EVT_GATTS_WRITE_REQ\000"
+ 1129      455F4556 
+ 1129      545F4741 
+ 1129      5454535F 
+ 1129      57524954 
+ 1130              	.LASF56:
+ 1131 05bf 4359424C 		.ascii	"CYBLE_EVT_GATTC_FIND_BY_TYPE_VALUE_RSP\000"
+ 1131      455F4556 
+ 1131      545F4741 
+ 1131      5454435F 
+ 1131      46494E44 
+ 1132              	.LASF28:
+ 1133 05e6 4359424C 		.ascii	"CYBLE_EVT_GAP_AUTH_COMPLETE\000"
+ 1133      455F4556 
+ 1133      545F4741 
+ 1133      505F4155 
+ 1133      54485F43 
+ 1134              	.LASF8:
+ 1135 0602 756E7369 		.ascii	"unsigned int\000"
+ 1135      676E6564 
+ 1135      20696E74 
+ 1135      00
+ 1136              	.LASF49:
+ 1137 060f 4359424C 		.ascii	"CYBLE_EVT_GATT_CONNECT_IND\000"
+ 1137      455F4556 
+ 1137      545F4741 
+ 1137      54545F43 
+ 1137      4F4E4E45 
+ 1138              	.LASF5:
+ 1139 062a 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1139      20756E73 
+ 1139      69676E65 
+ 1139      6420696E 
+ 1139      7400
+ 1140              	.LASF25:
+ 1141 063c 4359424C 		.ascii	"CYBLE_EVT_GAP_AUTH_REQ\000"
+ 1141      455F4556 
+ 1141      545F4741 
+ 1141      505F4155 
+ 1141      54485F52 
+ 1142              	.LASF78:
+ 1143 0653 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_DISCONN_IND\000"
+ 1143      455F4556 
+ 1143      545F4C32 
+ 1143      4341505F 
+ 1143      43424643 
+ 1144              	.LASF33:
+ 1145 0674 4359424C 		.ascii	"CYBLE_EVT_GAP_ENCRYPT_CHANGE\000"
+ 1145      455F4556 
+ 1145      545F4741 
+ 1145      505F454E 
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 27
+
+
+ 1145      43525950 
+ 1146              	.LASF44:
+ 1147 0691 4359424C 		.ascii	"CYBLE_EVT_GAP_CONN_ESTB\000"
+ 1147      455F4556 
+ 1147      545F4741 
+ 1147      505F434F 
+ 1147      4E4E5F45 
+ 1148              	.LASF72:
+ 1149 06a9 4359424C 		.ascii	"CYBLE_EVT_GATTC_LONG_PROCEDURE_END\000"
+ 1149      455F4556 
+ 1149      545F4741 
+ 1149      5454435F 
+ 1149      4C4F4E47 
+ 1150              	.LASF3:
+ 1151 06cc 73686F72 		.ascii	"short unsigned int\000"
+ 1151      7420756E 
+ 1151      7369676E 
+ 1151      65642069 
+ 1151      6E7400
+ 1152              	.LASF87:
+ 1153 06df 4359424C 		.ascii	"CYBLE_EVT_FLASH_CORRUPT\000"
+ 1153      455F4556 
+ 1153      545F464C 
+ 1153      4153485F 
+ 1153      434F5252 
+ 1154              	.LASF34:
+ 1155 06f7 4359424C 		.ascii	"CYBLE_EVT_GAP_CONNECTION_UPDATE_COMPLETE\000"
+ 1155      455F4556 
+ 1155      545F4741 
+ 1155      505F434F 
+ 1155      4E4E4543 
+ 1156              	.LASF43:
+ 1157 0720 4359424C 		.ascii	"CYBLE_EVT_GAP_SMP_NEGOTIATED_AUTH_INFO\000"
+ 1157      455F4556 
+ 1157      545F4741 
+ 1157      505F534D 
+ 1157      505F4E45 
+ 1158              	.LASF14:
+ 1159 0747 63686172 		.ascii	"char\000"
+ 1159      00
+ 1160              	.LASF75:
+ 1161 074c 4359424C 		.ascii	"CYBLE_EVT_L2CAP_COMMAND_REJ\000"
+ 1161      455F4556 
+ 1161      545F4C32 
+ 1161      4341505F 
+ 1161      434F4D4D 
+ 1162              	.LASF9:
+ 1163 0768 75696E74 		.ascii	"uint8\000"
+ 1163      3800
+ 1164              	.LASF80:
+ 1165 076e 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_DATA_READ\000"
+ 1165      455F4556 
+ 1165      545F4C32 
+ 1165      4341505F 
+ 1165      43424643 
+ 1166              	.LASF58:
+ 1167 078d 4359424C 		.ascii	"CYBLE_EVT_GATTC_READ_BLOB_RSP\000"
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 28
+
+
+ 1167      455F4556 
+ 1167      545F4741 
+ 1167      5454435F 
+ 1167      52454144 
+ 1168              	.LASF91:
+ 1169 07ab 62437572 		.ascii	"bCurPhase\000"
+ 1169      50686173 
+ 1169      6500
+ 1170              	.LASF65:
+ 1171 07b5 4359424C 		.ascii	"CYBLE_EVT_GATTC_EXEC_WRITE_RSP\000"
+ 1171      455F4556 
+ 1171      545F4741 
+ 1171      5454435F 
+ 1171      45584543 
+ 1172              	.LASF10:
+ 1173 07d4 75696E74 		.ascii	"uint32\000"
+ 1173      333200
+ 1174              	.LASF84:
+ 1175 07db 4359424C 		.ascii	"CYBLE_EVT_PENDING_FLASH_WRITE\000"
+ 1175      455F4556 
+ 1175      545F5045 
+ 1175      4E44494E 
+ 1175      475F464C 
+ 1176              	.LASF81:
+ 1177 07f9 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_RX_CREDIT_IND\000"
+ 1177      455F4556 
+ 1177      545F4C32 
+ 1177      4341505F 
+ 1177      43424643 
+ 1178              	.LASF13:
+ 1179 081c 646F7562 		.ascii	"double\000"
+ 1179      6C6500
+ 1180              	.LASF101:
+ 1181 0823 433A5C55 		.ascii	"C:\\Users\\bernde\\Documents\\PSoC Creator\\Martins"
+ 1181      73657273 
+ 1181      5C626572 
+ 1181      6E64655C 
+ 1181      446F6375 
+ 1182 0851 4D6F7573 		.ascii	"Mouse\\MartinsMouse.cydsn\000"
+ 1182      655C4D61 
+ 1182      7274696E 
+ 1182      734D6F75 
+ 1182      73652E63 
+ 1183              	.LASF82:
+ 1184 086a 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_TX_CREDIT_IND\000"
+ 1184      455F4556 
+ 1184      545F4C32 
+ 1184      4341505F 
+ 1184      43424643 
+ 1185              	.LASF45:
+ 1186 088d 4359424C 		.ascii	"CYBLE_EVT_GAP_SCAN_REQ_RECVD\000"
+ 1186      455F4556 
+ 1186      545F4741 
+ 1186      505F5343 
+ 1186      414E5F52 
+ 1187              	.LASF97:
+ 1188 08aa 6D624D6F 		.ascii	"mbMouseWheelPosition\000"
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 29
+
+
+ 1188      75736557 
+ 1188      6865656C 
+ 1188      506F7369 
+ 1188      74696F6E 
+ 1189              	.LASF96:
+ 1190 08bf 4D6F7573 		.ascii	"MouseWheel_GetKeys\000"
+ 1190      65576865 
+ 1190      656C5F47 
+ 1190      65744B65 
+ 1190      797300
+ 1191              	.LASF20:
+ 1192 08d2 4359424C 		.ascii	"CYBLE_EVT_HARDWARE_ERROR\000"
+ 1192      455F4556 
+ 1192      545F4841 
+ 1192      52445741 
+ 1192      52455F45 
+ 1193              	.LASF95:
+ 1194 08eb 4D6F7573 		.ascii	"MouseWheel_GetPosition\000"
+ 1194      65576865 
+ 1194      656C5F47 
+ 1194      6574506F 
+ 1194      73697469 
+ 1195              	.LASF74:
+ 1196 0902 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CONN_PARAM_UPDATE_RSP\000"
+ 1196      455F4556 
+ 1196      545F4C32 
+ 1196      4341505F 
+ 1196      434F4E4E 
+ 1197              	.LASF24:
+ 1198 0928 4359424C 		.ascii	"CYBLE_EVT_GAPC_SCAN_PROGRESS_RESULT\000"
+ 1198      455F4556 
+ 1198      545F4741 
+ 1198      50435F53 
+ 1198      43414E5F 
+ 1199              	.LASF53:
+ 1200 094c 4359424C 		.ascii	"CYBLE_EVT_GATTC_READ_BY_GROUP_TYPE_RSP\000"
+ 1200      455F4556 
+ 1200      545F4741 
+ 1200      5454435F 
+ 1200      52454144 
+ 1201              	.LASF62:
+ 1202 0973 4359424C 		.ascii	"CYBLE_EVT_GATTS_WRITE_CMD_REQ\000"
+ 1202      455F4556 
+ 1202      545F4741 
+ 1202      5454535F 
+ 1202      57524954 
+ 1203              	.LASF52:
+ 1204 0991 4359424C 		.ascii	"CYBLE_EVT_GATTC_XCHNG_MTU_RSP\000"
+ 1204      455F4556 
+ 1204      545F4741 
+ 1204      5454435F 
+ 1204      5843484E 
+ 1205              	.LASF19:
+ 1206 09af 4359424C 		.ascii	"CYBLE_EVT_TIMEOUT\000"
+ 1206      455F4556 
+ 1206      545F5449 
+ 1206      4D454F55 
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 30
+
+
+ 1206      5400
+ 1207              	.LASF83:
+ 1208 09c1 4359424C 		.ascii	"CYBLE_EVT_L2CAP_CBFC_DATA_WRITE_IND\000"
+ 1208      455F4556 
+ 1208      545F4C32 
+ 1208      4341505F 
+ 1208      43424643 
+ 1209              	.LASF35:
+ 1210 09e5 4359424C 		.ascii	"CYBLE_EVT_GAPC_SCAN_START_STOP\000"
+ 1210      455F4556 
+ 1210      545F4741 
+ 1210      50435F53 
+ 1210      43414E5F 
+ 1211              	.LASF88:
+ 1212 0a04 4359424C 		.ascii	"CYBLE_EVT_MAX\000"
+ 1212      455F4556 
+ 1212      545F4D41 
+ 1212      5800
+ 1213              	.LASF93:
+ 1214 0a12 4D6F7573 		.ascii	"MouseWheel_Start\000"
+ 1214      65576865 
+ 1214      656C5F53 
+ 1214      74617274 
+ 1214      00
+ 1215              	.LASF71:
+ 1216 0a23 4359424C 		.ascii	"CYBLE_EVT_GATTS_READ_CHAR_VAL_ACCESS_REQ\000"
+ 1216      455F4556 
+ 1216      545F4741 
+ 1216      5454535F 
+ 1216      52454144 
+ 1217              	.LASF70:
+ 1218 0a4c 4359424C 		.ascii	"CYBLE_EVT_GATTC_STOP_CMD_COMPLETE\000"
+ 1218      455F4556 
+ 1218      545F4741 
+ 1218      5454435F 
+ 1218      53544F50 
+ 1219              	.LASF102:
+ 1220 0a6e 4D6F7573 		.ascii	"MouseWheel_ISR\000"
+ 1220      65576865 
+ 1220      656C5F49 
+ 1220      535200
+ 1221              	.LASF64:
+ 1222 0a7d 4359424C 		.ascii	"CYBLE_EVT_GATTS_EXEC_WRITE_REQ\000"
+ 1222      455F4556 
+ 1222      545F4741 
+ 1222      5454535F 
+ 1222      45584543 
+ 1223              	.LASF32:
+ 1224 0a9c 4359424C 		.ascii	"CYBLE_EVT_GAP_DEVICE_DISCONNECTED\000"
+ 1224      455F4556 
+ 1224      545F4741 
+ 1224      505F4445 
+ 1224      56494345 
+ 1225              	.LASF69:
+ 1226 0abe 4359424C 		.ascii	"CYBLE_EVT_GATTS_DATA_SIGNED_CMD_REQ\000"
+ 1226      455F4556 
+ 1226      545F4741 
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\cceZdZhp.s 			page 31
+
+
+ 1226      5454535F 
+ 1226      44415441 
+ 1227              	.LASF86:
+ 1228 0ae2 4359424C 		.ascii	"CYBLE_EVT_HCI_PKT\000"
+ 1228      455F4556 
+ 1228      545F4843 
+ 1228      495F504B 
+ 1228      5400
+ 1229              	.LASF39:
+ 1230 0af4 4359424C 		.ascii	"CYBLE_EVT_GAP_OOB_GENERATED_NOTIFICATION\000"
+ 1230      455F4556 
+ 1230      545F4741 
+ 1230      505F4F4F 
+ 1230      425F4745 
+ 1231              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

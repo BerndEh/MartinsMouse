@@ -1,0 +1,775 @@
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccIRp29E.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"HandleLowPower.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.HandleLowPowerMode,"ax",%progbits
+  20              		.align	2
+  21              		.global	HandleLowPowerMode
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	HandleLowPowerMode, %function
+  25              	HandleLowPowerMode:
+  26              	.LFB35:
+  27              		.file 1 "HandleLowPower.c"
+   1:HandleLowPower.c **** /******************************************************************************
+   2:HandleLowPower.c **** * Project Name		: PSoC_4_BLE_Mouse_Slider_LED
+   3:HandleLowPower.c **** * File Name			: HandleLowPower.c
+   4:HandleLowPower.c **** * Version 			: 1.0
+   5:HandleLowPower.c **** * Device Used		: CY8C4247LQI-BL483
+   6:HandleLowPower.c **** * Software Used		: PSoC Creator 3.3 SP1
+   7:HandleLowPower.c **** * Compiler    		: ARM GCC 4.9.3, ARM MDK Generic
+   8:HandleLowPower.c **** * Related Hardware	: CY8CKIT-042-BLE Bluetooth Low Energy Pioneer Kit 
+   9:HandleLowPower.c **** * Owner             : ROIT
+  10:HandleLowPower.c **** *
+  11:HandleLowPower.c **** ********************************************************************************
+  12:HandleLowPower.c **** * Copyright (2015-16), Cypress Semiconductor Corporation. All Rights Reserved.
+  13:HandleLowPower.c **** ********************************************************************************
+  14:HandleLowPower.c **** * This software is owned by Cypress Semiconductor Corporation (Cypress)
+  15:HandleLowPower.c **** * and is protected by and subject to worldwide patent protection (United
+  16:HandleLowPower.c **** * States and foreign), United States copyright laws and international treaty
+  17:HandleLowPower.c **** * provisions. Cypress hereby grants to licensee a personal, non-exclusive,
+  18:HandleLowPower.c **** * non-transferable license to copy, use, modify, create derivative works of,
+  19:HandleLowPower.c **** * and compile the Cypress Source Code and derivative works for the sole
+  20:HandleLowPower.c **** * purpose of creating custom software in support of licensee product to be
+  21:HandleLowPower.c **** * used only in conjunction with a Cypress integrated circuit as specified in
+  22:HandleLowPower.c **** * the applicable agreement. Any reproduction, modification, translation,
+  23:HandleLowPower.c **** * compilation, or representation of this software except as specified above 
+  24:HandleLowPower.c **** * is prohibited without the express written permission of Cypress.
+  25:HandleLowPower.c **** *
+  26:HandleLowPower.c **** * Disclaimer: CYPRESS MAKES NO WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, WITH 
+  27:HandleLowPower.c **** * REGARD TO THIS MATERIAL, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+  28:HandleLowPower.c **** * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+  29:HandleLowPower.c **** * Cypress reserves the right to make changes without further notice to the 
+  30:HandleLowPower.c **** * materials described herein. Cypress does not assume any liability arising out 
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccIRp29E.s 			page 2
+
+
+  31:HandleLowPower.c **** * of the application or use of any product or circuit described herein. Cypress 
+  32:HandleLowPower.c **** * does not authorize its products for use as critical components in life-support 
+  33:HandleLowPower.c **** * systems where a malfunction or failure may reasonably be expected to result in 
+  34:HandleLowPower.c **** * significant injury to the user. The inclusion of Cypress' product in a life-
+  35:HandleLowPower.c **** * support systems application implies that the manufacturer assumes all risk of 
+  36:HandleLowPower.c **** * such use and in doing so indemnifies Cypress against all charges. 
+  37:HandleLowPower.c **** *
+  38:HandleLowPower.c **** * Use of this Software may be limited by and subject to the applicable Cypress
+  39:HandleLowPower.c **** * software license agreement. 
+  40:HandleLowPower.c **** *******************************************************************************/
+  41:HandleLowPower.c **** #include <main.h>
+  42:HandleLowPower.c **** 
+  43:HandleLowPower.c **** /* This flag is used by application to know whether a Central 
+  44:HandleLowPower.c **** * device has been connected. This is updated in BLE event callback 
+  45:HandleLowPower.c **** * function*/
+  46:HandleLowPower.c **** extern uint8 deviceConnected;
+  47:HandleLowPower.c **** 
+  48:HandleLowPower.c **** /*******************************************************************************
+  49:HandleLowPower.c **** * Function Name: HandleLowPowerMode
+  50:HandleLowPower.c **** ********************************************************************************
+  51:HandleLowPower.c **** * Summary:
+  52:HandleLowPower.c **** *        This function puts the BLESS in deep sleep mode and CPU to sleep mode. 
+  53:HandleLowPower.c **** * System will resume from here when it wakes from user button press.
+  54:HandleLowPower.c **** *
+  55:HandleLowPower.c **** * Parameters:
+  56:HandleLowPower.c **** *  void
+  57:HandleLowPower.c **** *
+  58:HandleLowPower.c **** * Return:
+  59:HandleLowPower.c **** *  void
+  60:HandleLowPower.c **** *
+  61:HandleLowPower.c **** *******************************************************************************/
+  62:HandleLowPower.c **** void HandleLowPowerMode(void)
+  63:HandleLowPower.c **** {
+  28              		.loc 1 63 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 8
+  31              		@ frame_needed = 1, uses_anonymous_args = 0
+  32 0000 90B5     		push	{r4, r7, lr}
+  33              		.cfi_def_cfa_offset 12
+  34              		.cfi_offset 4, -12
+  35              		.cfi_offset 7, -8
+  36              		.cfi_offset 14, -4
+  37 0002 83B0     		sub	sp, sp, #12
+  38              		.cfi_def_cfa_offset 24
+  39 0004 00AF     		add	r7, sp, #0
+  40              		.cfi_def_cfa_register 7
+  64:HandleLowPower.c **** 	#ifdef ENABLE_LOW_POWER_MODE
+  65:HandleLowPower.c **** 		/* Local variable to store the status of BLESS Hardware block */
+  66:HandleLowPower.c **** 		CYBLE_LP_MODE_T sleepMode;
+  67:HandleLowPower.c **** 		CYBLE_BLESS_STATE_T blessState;
+  68:HandleLowPower.c **** 		
+  69:HandleLowPower.c **** 		#ifdef Mouse_ENABLED
+  70:HandleLowPower.c **** 		/* Put Mouse to Sleep*/
+  71:HandleLowPower.c **** 		Mouse_Sleep();
+  72:HandleLowPower.c **** 		#endif
+  73:HandleLowPower.c **** 		
+  74:HandleLowPower.c **** 		/* Put BLESS into Deep Sleep and check the return status */
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccIRp29E.s 			page 3
+
+
+  75:HandleLowPower.c **** 		sleepMode = CyBle_EnterLPM(CYBLE_BLESS_DEEPSLEEP);
+  41              		.loc 1 75 0
+  42 0006 FC1D     		adds	r4, r7, #7
+  43 0008 0320     		movs	r0, #3
+  44 000a FFF7FEFF 		bl	CyBle_EnterLPM
+  45 000e 0300     		movs	r3, r0
+  46 0010 2370     		strb	r3, [r4]
+  76:HandleLowPower.c **** 		
+  77:HandleLowPower.c **** 		/* Disable global interrupt to prevent changes from any other interrupt ISR */
+  78:HandleLowPower.c **** 		CyGlobalIntDisable;
+  47              		.loc 1 78 0
+  48              		.syntax divided
+  49              	@ 78 "HandleLowPower.c" 1
+  50 0012 72B6     		CPSID   i
+  51              	@ 0 "" 2
+  79:HandleLowPower.c **** 	
+  80:HandleLowPower.c **** 		/* Check the Status of BLESS */
+  81:HandleLowPower.c **** 		blessState = CyBle_GetBleSsState();
+  52              		.loc 1 81 0
+  53              		.thumb
+  54              		.syntax unified
+  55 0014 BC1D     		adds	r4, r7, #6
+  56 0016 FFF7FEFF 		bl	CyBle_GetBleSsState
+  57 001a 0300     		movs	r3, r0
+  58 001c 2370     		strb	r3, [r4]
+  82:HandleLowPower.c **** 
+  83:HandleLowPower.c **** 		if(sleepMode == CYBLE_BLESS_DEEPSLEEP)
+  59              		.loc 1 83 0
+  60 001e FB1D     		adds	r3, r7, #7
+  61 0020 1B78     		ldrb	r3, [r3]
+  62 0022 032B     		cmp	r3, #3
+  63 0024 0AD1     		bne	.L2
+  84:HandleLowPower.c **** 		{
+  85:HandleLowPower.c **** 		    /* If the ECO has started or the BLESS can go to Deep Sleep, then place CPU 
+  86:HandleLowPower.c **** 			* to Deep Sleep */
+  87:HandleLowPower.c **** 			if(blessState == CYBLE_BLESS_STATE_ECO_ON || blessState == CYBLE_BLESS_STATE_DEEPSLEEP)
+  64              		.loc 1 87 0
+  65 0026 BB1D     		adds	r3, r7, #6
+  66 0028 1B78     		ldrb	r3, [r3]
+  67 002a 042B     		cmp	r3, #4
+  68 002c 03D0     		beq	.L3
+  69              		.loc 1 87 0 is_stmt 0 discriminator 1
+  70 002e BB1D     		adds	r3, r7, #6
+  71 0030 1B78     		ldrb	r3, [r3]
+  72 0032 062B     		cmp	r3, #6
+  73 0034 08D1     		bne	.L5
+  74              	.L3:
+  88:HandleLowPower.c **** 		    {
+  89:HandleLowPower.c **** //				if(TRUE == deviceConnected)
+  90:HandleLowPower.c **** //				{
+  91:HandleLowPower.c **** //					// PWM für WheelLed braucht den Clock also nur sleep
+  92:HandleLowPower.c **** //					//CySysClkWriteImoFreq(IMO_FREQUENCY_3MHZ);
+  93:HandleLowPower.c **** //					CySysPmSleep();
+  94:HandleLowPower.c **** //					//CySysClkWriteImoFreq(IMO_FREQUENCY_12MHZ);
+  95:HandleLowPower.c **** //				}
+  96:HandleLowPower.c **** //				else
+  97:HandleLowPower.c **** //				{
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccIRp29E.s 			page 4
+
+
+  98:HandleLowPower.c **** //					// Place CPU to Deep sleep only when we are not connected 
+  99:HandleLowPower.c **** //					// PWM für WheelLed braucht den Clock
+ 100:HandleLowPower.c **** //			        CySysPmDeepSleep();
+ 101:HandleLowPower.c **** //				}
+ 102:HandleLowPower.c ****                 
+ 103:HandleLowPower.c ****                 CySysPmDeepSleep();
+  75              		.loc 1 103 0 is_stmt 1
+  76 0036 FFF7FEFF 		bl	CySysPmDeepSleep
+  77 003a 05E0     		b	.L5
+  78              	.L2:
+ 104:HandleLowPower.c **** 		 	}
+ 105:HandleLowPower.c **** 		}
+ 106:HandleLowPower.c **** 		else
+ 107:HandleLowPower.c **** 		{
+ 108:HandleLowPower.c **** 		    if(blessState != CYBLE_BLESS_STATE_EVENT_CLOSE)
+  79              		.loc 1 108 0
+  80 003c BB1D     		adds	r3, r7, #6
+  81 003e 1B78     		ldrb	r3, [r3]
+  82 0040 022B     		cmp	r3, #2
+  83 0042 01D0     		beq	.L5
+ 109:HandleLowPower.c **** 		    {
+ 110:HandleLowPower.c **** 				/* If the BLESS hardware block cannot go to Deep Sleep and BLE Event has not 
+ 111:HandleLowPower.c **** 				* closed yet, then place CPU to Sleep */
+ 112:HandleLowPower.c **** 		        CySysPmSleep();
+  84              		.loc 1 112 0
+  85 0044 FFF7FEFF 		bl	CySysPmSleep
+  86              	.L5:
+ 113:HandleLowPower.c **** 		    }
+ 114:HandleLowPower.c **** 		}
+ 115:HandleLowPower.c **** 		
+ 116:HandleLowPower.c **** 		/* Re-enable global interrupt mask after wakeup */
+ 117:HandleLowPower.c **** 		CyGlobalIntEnable;
+  87              		.loc 1 117 0
+  88              		.syntax divided
+  89              	@ 117 "HandleLowPower.c" 1
+  90 0048 62B6     		CPSIE   i
+  91              	@ 0 "" 2
+ 118:HandleLowPower.c **** 		
+ 119:HandleLowPower.c **** 		#ifdef Mouse_ENABLED
+ 120:HandleLowPower.c **** 		/* Wakeup Mouse Block */
+ 121:HandleLowPower.c **** 		Mouse_Wakeup();
+ 122:HandleLowPower.c **** 		#endif
+ 123:HandleLowPower.c **** 		
+ 124:HandleLowPower.c **** 	#endif
+ 125:HandleLowPower.c **** }
+  92              		.loc 1 125 0
+  93              		.thumb
+  94              		.syntax unified
+  95 004a C046     		nop
+  96 004c BD46     		mov	sp, r7
+  97 004e 03B0     		add	sp, sp, #12
+  98              		@ sp needed
+  99 0050 90BD     		pop	{r4, r7, pc}
+ 100              		.cfi_endproc
+ 101              	.LFE35:
+ 102              		.size	HandleLowPowerMode, .-HandleLowPowerMode
+ 103 0052 C046     		.text
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccIRp29E.s 			page 5
+
+
+ 104              	.Letext0:
+ 105              		.file 2 "Generated_Source\\PSoC4/BLE_Stack.h"
+ 106              		.section	.debug_info,"",%progbits
+ 107              	.Ldebug_info0:
+ 108 0000 3B010000 		.4byte	0x13b
+ 109 0004 0400     		.2byte	0x4
+ 110 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 111 000a 04       		.byte	0x4
+ 112 000b 01       		.uleb128 0x1
+ 113 000c 06010000 		.4byte	.LASF31
+ 114 0010 0C       		.byte	0xc
+ 115 0011 1F030000 		.4byte	.LASF32
+ 116 0015 44000000 		.4byte	.LASF33
+ 117 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 118 001d 00000000 		.4byte	0
+ 119 0021 00000000 		.4byte	.Ldebug_line0
+ 120 0025 02       		.uleb128 0x2
+ 121 0026 01       		.byte	0x1
+ 122 0027 06       		.byte	0x6
+ 123 0028 00030000 		.4byte	.LASF0
+ 124 002c 02       		.uleb128 0x2
+ 125 002d 01       		.byte	0x1
+ 126 002e 08       		.byte	0x8
+ 127 002f BF000000 		.4byte	.LASF1
+ 128 0033 02       		.uleb128 0x2
+ 129 0034 02       		.byte	0x2
+ 130 0035 05       		.byte	0x5
+ 131 0036 D1020000 		.4byte	.LASF2
+ 132 003a 02       		.uleb128 0x2
+ 133 003b 02       		.byte	0x2
+ 134 003c 07       		.byte	0x7
+ 135 003d DF000000 		.4byte	.LASF3
+ 136 0041 02       		.uleb128 0x2
+ 137 0042 04       		.byte	0x4
+ 138 0043 05       		.byte	0x5
+ 139 0044 EB020000 		.4byte	.LASF4
+ 140 0048 02       		.uleb128 0x2
+ 141 0049 04       		.byte	0x4
+ 142 004a 07       		.byte	0x7
+ 143 004b CD000000 		.4byte	.LASF5
+ 144 004f 02       		.uleb128 0x2
+ 145 0050 08       		.byte	0x8
+ 146 0051 05       		.byte	0x5
+ 147 0052 74020000 		.4byte	.LASF6
+ 148 0056 02       		.uleb128 0x2
+ 149 0057 08       		.byte	0x8
+ 150 0058 07       		.byte	0x7
+ 151 0059 A8000000 		.4byte	.LASF7
+ 152 005d 03       		.uleb128 0x3
+ 153 005e 04       		.byte	0x4
+ 154 005f 05       		.byte	0x5
+ 155 0060 696E7400 		.ascii	"int\000"
+ 156 0064 02       		.uleb128 0x2
+ 157 0065 04       		.byte	0x4
+ 158 0066 07       		.byte	0x7
+ 159 0067 0E020000 		.4byte	.LASF8
+ 160 006b 02       		.uleb128 0x2
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccIRp29E.s 			page 6
+
+
+ 161 006c 04       		.byte	0x4
+ 162 006d 04       		.byte	0x4
+ 163 006e A2000000 		.4byte	.LASF9
+ 164 0072 02       		.uleb128 0x2
+ 165 0073 08       		.byte	0x8
+ 166 0074 04       		.byte	0x4
+ 167 0075 D6010000 		.4byte	.LASF10
+ 168 0079 02       		.uleb128 0x2
+ 169 007a 01       		.byte	0x1
+ 170 007b 08       		.byte	0x8
+ 171 007c 1B020000 		.4byte	.LASF11
+ 172 0080 02       		.uleb128 0x2
+ 173 0081 08       		.byte	0x8
+ 174 0082 04       		.byte	0x4
+ 175 0083 F4020000 		.4byte	.LASF12
+ 176 0087 02       		.uleb128 0x2
+ 177 0088 04       		.byte	0x4
+ 178 0089 07       		.byte	0x7
+ 179 008a 6B020000 		.4byte	.LASF13
+ 180 008e 04       		.uleb128 0x4
+ 181 008f 01       		.byte	0x1
+ 182 0090 2C000000 		.4byte	0x2c
+ 183 0094 02       		.byte	0x2
+ 184 0095 6004     		.2byte	0x460
+ 185 0097 BA000000 		.4byte	0xba
+ 186 009b 05       		.uleb128 0x5
+ 187 009c 0C030000 		.4byte	.LASF14
+ 188 00a0 01       		.byte	0x1
+ 189 00a1 05       		.uleb128 0x5
+ 190 00a2 19000000 		.4byte	.LASF15
+ 191 00a6 02       		.byte	0x2
+ 192 00a7 05       		.uleb128 0x5
+ 193 00a8 9E020000 		.4byte	.LASF16
+ 194 00ac 03       		.byte	0x3
+ 195 00ad 05       		.uleb128 0x5
+ 196 00ae C0010000 		.4byte	.LASF17
+ 197 00b2 04       		.byte	0x4
+ 198 00b3 05       		.uleb128 0x5
+ 199 00b4 F2000000 		.4byte	.LASF18
+ 200 00b8 FF       		.byte	0xff
+ 201 00b9 00       		.byte	0
+ 202 00ba 06       		.uleb128 0x6
+ 203 00bb DB020000 		.4byte	.LASF27
+ 204 00bf 02       		.byte	0x2
+ 205 00c0 7C04     		.2byte	0x47c
+ 206 00c2 8E000000 		.4byte	0x8e
+ 207 00c6 04       		.uleb128 0x4
+ 208 00c7 01       		.byte	0x1
+ 209 00c8 2C000000 		.4byte	0x2c
+ 210 00cc 02       		.byte	0x2
+ 211 00cd 8004     		.2byte	0x480
+ 212 00cf 04010000 		.4byte	0x104
+ 213 00d3 05       		.uleb128 0x5
+ 214 00d4 00000000 		.4byte	.LASF19
+ 215 00d8 01       		.byte	0x1
+ 216 00d9 05       		.uleb128 0x5
+ 217 00da 33020000 		.4byte	.LASF20
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccIRp29E.s 			page 7
+
+
+ 218 00de 02       		.byte	0x2
+ 219 00df 05       		.uleb128 0x5
+ 220 00e0 94010000 		.4byte	.LASF21
+ 221 00e4 03       		.byte	0x3
+ 222 00e5 05       		.uleb128 0x5
+ 223 00e6 2B000000 		.4byte	.LASF22
+ 224 00ea 04       		.byte	0x4
+ 225 00eb 05       		.uleb128 0x5
+ 226 00ec B4020000 		.4byte	.LASF23
+ 227 00f0 05       		.byte	0x5
+ 228 00f1 05       		.uleb128 0x5
+ 229 00f2 82020000 		.4byte	.LASF24
+ 230 00f6 06       		.byte	0x6
+ 231 00f7 05       		.uleb128 0x5
+ 232 00f8 F2010000 		.4byte	.LASF25
+ 233 00fc 07       		.byte	0x7
+ 234 00fd 05       		.uleb128 0x5
+ 235 00fe 51020000 		.4byte	.LASF26
+ 236 0102 FF       		.byte	0xff
+ 237 0103 00       		.byte	0
+ 238 0104 06       		.uleb128 0x6
+ 239 0105 AC010000 		.4byte	.LASF28
+ 240 0109 02       		.byte	0x2
+ 241 010a 9104     		.2byte	0x491
+ 242 010c C6000000 		.4byte	0xc6
+ 243 0110 07       		.uleb128 0x7
+ 244 0111 20020000 		.4byte	.LASF34
+ 245 0115 01       		.byte	0x1
+ 246 0116 3E       		.byte	0x3e
+ 247 0117 00000000 		.4byte	.LFB35
+ 248 011b 52000000 		.4byte	.LFE35-.LFB35
+ 249 011f 01       		.uleb128 0x1
+ 250 0120 9C       		.byte	0x9c
+ 251 0121 08       		.uleb128 0x8
+ 252 0122 DD010000 		.4byte	.LASF29
+ 253 0126 01       		.byte	0x1
+ 254 0127 42       		.byte	0x42
+ 255 0128 BA000000 		.4byte	0xba
+ 256 012c 02       		.uleb128 0x2
+ 257 012d 91       		.byte	0x91
+ 258 012e 6F       		.sleb128 -17
+ 259 012f 08       		.uleb128 0x8
+ 260 0130 E7010000 		.4byte	.LASF30
+ 261 0134 01       		.byte	0x1
+ 262 0135 43       		.byte	0x43
+ 263 0136 04010000 		.4byte	0x104
+ 264 013a 02       		.uleb128 0x2
+ 265 013b 91       		.byte	0x91
+ 266 013c 6E       		.sleb128 -18
+ 267 013d 00       		.byte	0
+ 268 013e 00       		.byte	0
+ 269              		.section	.debug_abbrev,"",%progbits
+ 270              	.Ldebug_abbrev0:
+ 271 0000 01       		.uleb128 0x1
+ 272 0001 11       		.uleb128 0x11
+ 273 0002 01       		.byte	0x1
+ 274 0003 25       		.uleb128 0x25
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccIRp29E.s 			page 8
+
+
+ 275 0004 0E       		.uleb128 0xe
+ 276 0005 13       		.uleb128 0x13
+ 277 0006 0B       		.uleb128 0xb
+ 278 0007 03       		.uleb128 0x3
+ 279 0008 0E       		.uleb128 0xe
+ 280 0009 1B       		.uleb128 0x1b
+ 281 000a 0E       		.uleb128 0xe
+ 282 000b 55       		.uleb128 0x55
+ 283 000c 17       		.uleb128 0x17
+ 284 000d 11       		.uleb128 0x11
+ 285 000e 01       		.uleb128 0x1
+ 286 000f 10       		.uleb128 0x10
+ 287 0010 17       		.uleb128 0x17
+ 288 0011 00       		.byte	0
+ 289 0012 00       		.byte	0
+ 290 0013 02       		.uleb128 0x2
+ 291 0014 24       		.uleb128 0x24
+ 292 0015 00       		.byte	0
+ 293 0016 0B       		.uleb128 0xb
+ 294 0017 0B       		.uleb128 0xb
+ 295 0018 3E       		.uleb128 0x3e
+ 296 0019 0B       		.uleb128 0xb
+ 297 001a 03       		.uleb128 0x3
+ 298 001b 0E       		.uleb128 0xe
+ 299 001c 00       		.byte	0
+ 300 001d 00       		.byte	0
+ 301 001e 03       		.uleb128 0x3
+ 302 001f 24       		.uleb128 0x24
+ 303 0020 00       		.byte	0
+ 304 0021 0B       		.uleb128 0xb
+ 305 0022 0B       		.uleb128 0xb
+ 306 0023 3E       		.uleb128 0x3e
+ 307 0024 0B       		.uleb128 0xb
+ 308 0025 03       		.uleb128 0x3
+ 309 0026 08       		.uleb128 0x8
+ 310 0027 00       		.byte	0
+ 311 0028 00       		.byte	0
+ 312 0029 04       		.uleb128 0x4
+ 313 002a 04       		.uleb128 0x4
+ 314 002b 01       		.byte	0x1
+ 315 002c 0B       		.uleb128 0xb
+ 316 002d 0B       		.uleb128 0xb
+ 317 002e 49       		.uleb128 0x49
+ 318 002f 13       		.uleb128 0x13
+ 319 0030 3A       		.uleb128 0x3a
+ 320 0031 0B       		.uleb128 0xb
+ 321 0032 3B       		.uleb128 0x3b
+ 322 0033 05       		.uleb128 0x5
+ 323 0034 01       		.uleb128 0x1
+ 324 0035 13       		.uleb128 0x13
+ 325 0036 00       		.byte	0
+ 326 0037 00       		.byte	0
+ 327 0038 05       		.uleb128 0x5
+ 328 0039 28       		.uleb128 0x28
+ 329 003a 00       		.byte	0
+ 330 003b 03       		.uleb128 0x3
+ 331 003c 0E       		.uleb128 0xe
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccIRp29E.s 			page 9
+
+
+ 332 003d 1C       		.uleb128 0x1c
+ 333 003e 0B       		.uleb128 0xb
+ 334 003f 00       		.byte	0
+ 335 0040 00       		.byte	0
+ 336 0041 06       		.uleb128 0x6
+ 337 0042 16       		.uleb128 0x16
+ 338 0043 00       		.byte	0
+ 339 0044 03       		.uleb128 0x3
+ 340 0045 0E       		.uleb128 0xe
+ 341 0046 3A       		.uleb128 0x3a
+ 342 0047 0B       		.uleb128 0xb
+ 343 0048 3B       		.uleb128 0x3b
+ 344 0049 05       		.uleb128 0x5
+ 345 004a 49       		.uleb128 0x49
+ 346 004b 13       		.uleb128 0x13
+ 347 004c 00       		.byte	0
+ 348 004d 00       		.byte	0
+ 349 004e 07       		.uleb128 0x7
+ 350 004f 2E       		.uleb128 0x2e
+ 351 0050 01       		.byte	0x1
+ 352 0051 3F       		.uleb128 0x3f
+ 353 0052 19       		.uleb128 0x19
+ 354 0053 03       		.uleb128 0x3
+ 355 0054 0E       		.uleb128 0xe
+ 356 0055 3A       		.uleb128 0x3a
+ 357 0056 0B       		.uleb128 0xb
+ 358 0057 3B       		.uleb128 0x3b
+ 359 0058 0B       		.uleb128 0xb
+ 360 0059 27       		.uleb128 0x27
+ 361 005a 19       		.uleb128 0x19
+ 362 005b 11       		.uleb128 0x11
+ 363 005c 01       		.uleb128 0x1
+ 364 005d 12       		.uleb128 0x12
+ 365 005e 06       		.uleb128 0x6
+ 366 005f 40       		.uleb128 0x40
+ 367 0060 18       		.uleb128 0x18
+ 368 0061 9642     		.uleb128 0x2116
+ 369 0063 19       		.uleb128 0x19
+ 370 0064 00       		.byte	0
+ 371 0065 00       		.byte	0
+ 372 0066 08       		.uleb128 0x8
+ 373 0067 34       		.uleb128 0x34
+ 374 0068 00       		.byte	0
+ 375 0069 03       		.uleb128 0x3
+ 376 006a 0E       		.uleb128 0xe
+ 377 006b 3A       		.uleb128 0x3a
+ 378 006c 0B       		.uleb128 0xb
+ 379 006d 3B       		.uleb128 0x3b
+ 380 006e 0B       		.uleb128 0xb
+ 381 006f 49       		.uleb128 0x49
+ 382 0070 13       		.uleb128 0x13
+ 383 0071 02       		.uleb128 0x2
+ 384 0072 18       		.uleb128 0x18
+ 385 0073 00       		.byte	0
+ 386 0074 00       		.byte	0
+ 387 0075 00       		.byte	0
+ 388              		.section	.debug_aranges,"",%progbits
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccIRp29E.s 			page 10
+
+
+ 389 0000 1C000000 		.4byte	0x1c
+ 390 0004 0200     		.2byte	0x2
+ 391 0006 00000000 		.4byte	.Ldebug_info0
+ 392 000a 04       		.byte	0x4
+ 393 000b 00       		.byte	0
+ 394 000c 0000     		.2byte	0
+ 395 000e 0000     		.2byte	0
+ 396 0010 00000000 		.4byte	.LFB35
+ 397 0014 52000000 		.4byte	.LFE35-.LFB35
+ 398 0018 00000000 		.4byte	0
+ 399 001c 00000000 		.4byte	0
+ 400              		.section	.debug_ranges,"",%progbits
+ 401              	.Ldebug_ranges0:
+ 402 0000 00000000 		.4byte	.LFB35
+ 403 0004 52000000 		.4byte	.LFE35
+ 404 0008 00000000 		.4byte	0
+ 405 000c 00000000 		.4byte	0
+ 406              		.section	.debug_line,"",%progbits
+ 407              	.Ldebug_line0:
+ 408 0000 77000000 		.section	.debug_str,"MS",%progbits,1
+ 408      02004D00 
+ 408      00000201 
+ 408      FB0E0D00 
+ 408      01010101 
+ 409              	.LASF19:
+ 410 0000 4359424C 		.ascii	"CYBLE_BLESS_STATE_ACTIVE\000"
+ 410      455F424C 
+ 410      4553535F 
+ 410      53544154 
+ 410      455F4143 
+ 411              	.LASF15:
+ 412 0019 4359424C 		.ascii	"CYBLE_BLESS_SLEEP\000"
+ 412      455F424C 
+ 412      4553535F 
+ 412      534C4545 
+ 412      5000
+ 413              	.LASF22:
+ 414 002b 4359424C 		.ascii	"CYBLE_BLESS_STATE_ECO_ON\000"
+ 414      455F424C 
+ 414      4553535F 
+ 414      53544154 
+ 414      455F4543 
+ 415              	.LASF33:
+ 416 0044 433A5C55 		.ascii	"C:\\Users\\bernde\\Documents\\PSoC Creator\\Martins"
+ 416      73657273 
+ 416      5C626572 
+ 416      6E64655C 
+ 416      446F6375 
+ 417 0072 4D6F7573 		.ascii	"MouseOhneWheelFinal\\MartinsMouseOhneWheel.cydsn\000"
+ 417      654F686E 
+ 417      65576865 
+ 417      656C4669 
+ 417      6E616C5C 
+ 418              	.LASF9:
+ 419 00a2 666C6F61 		.ascii	"float\000"
+ 419      7400
+ 420              	.LASF7:
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccIRp29E.s 			page 11
+
+
+ 421 00a8 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 421      206C6F6E 
+ 421      6720756E 
+ 421      7369676E 
+ 421      65642069 
+ 422              	.LASF1:
+ 423 00bf 756E7369 		.ascii	"unsigned char\000"
+ 423      676E6564 
+ 423      20636861 
+ 423      7200
+ 424              	.LASF5:
+ 425 00cd 6C6F6E67 		.ascii	"long unsigned int\000"
+ 425      20756E73 
+ 425      69676E65 
+ 425      6420696E 
+ 425      7400
+ 426              	.LASF3:
+ 427 00df 73686F72 		.ascii	"short unsigned int\000"
+ 427      7420756E 
+ 427      7369676E 
+ 427      65642069 
+ 427      6E7400
+ 428              	.LASF18:
+ 429 00f2 4359424C 		.ascii	"CYBLE_BLESS_INVALID\000"
+ 429      455F424C 
+ 429      4553535F 
+ 429      494E5641 
+ 429      4C494400 
+ 430              	.LASF31:
+ 431 0106 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 431      43313120 
+ 431      352E342E 
+ 431      31203230 
+ 431      31363036 
+ 432 0139 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0 -mthumb -g -O"
+ 432      20726576 
+ 432      6973696F 
+ 432      6E203233 
+ 432      37373135 
+ 433 016c 30202D66 		.ascii	"0 -ffunction-sections -ffat-lto-objects\000"
+ 433      66756E63 
+ 433      74696F6E 
+ 433      2D736563 
+ 433      74696F6E 
+ 434              	.LASF21:
+ 435 0194 4359424C 		.ascii	"CYBLE_BLESS_STATE_SLEEP\000"
+ 435      455F424C 
+ 435      4553535F 
+ 435      53544154 
+ 435      455F534C 
+ 436              	.LASF28:
+ 437 01ac 4359424C 		.ascii	"CYBLE_BLESS_STATE_T\000"
+ 437      455F424C 
+ 437      4553535F 
+ 437      53544154 
+ 437      455F5400 
+ 438              	.LASF17:
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccIRp29E.s 			page 12
+
+
+ 439 01c0 4359424C 		.ascii	"CYBLE_BLESS_HIBERNATE\000"
+ 439      455F424C 
+ 439      4553535F 
+ 439      48494245 
+ 439      524E4154 
+ 440              	.LASF10:
+ 441 01d6 646F7562 		.ascii	"double\000"
+ 441      6C6500
+ 442              	.LASF29:
+ 443 01dd 736C6565 		.ascii	"sleepMode\000"
+ 443      704D6F64 
+ 443      6500
+ 444              	.LASF30:
+ 445 01e7 626C6573 		.ascii	"blessState\000"
+ 445      73537461 
+ 445      746500
+ 446              	.LASF25:
+ 447 01f2 4359424C 		.ascii	"CYBLE_BLESS_STATE_HIBERNATE\000"
+ 447      455F424C 
+ 447      4553535F 
+ 447      53544154 
+ 447      455F4849 
+ 448              	.LASF8:
+ 449 020e 756E7369 		.ascii	"unsigned int\000"
+ 449      676E6564 
+ 449      20696E74 
+ 449      00
+ 450              	.LASF11:
+ 451 021b 63686172 		.ascii	"char\000"
+ 451      00
+ 452              	.LASF34:
+ 453 0220 48616E64 		.ascii	"HandleLowPowerMode\000"
+ 453      6C654C6F 
+ 453      77506F77 
+ 453      65724D6F 
+ 453      646500
+ 454              	.LASF20:
+ 455 0233 4359424C 		.ascii	"CYBLE_BLESS_STATE_EVENT_CLOSE\000"
+ 455      455F424C 
+ 455      4553535F 
+ 455      53544154 
+ 455      455F4556 
+ 456              	.LASF26:
+ 457 0251 4359424C 		.ascii	"CYBLE_BLESS_STATE_INVALID\000"
+ 457      455F424C 
+ 457      4553535F 
+ 457      53544154 
+ 457      455F494E 
+ 458              	.LASF13:
+ 459 026b 73697A65 		.ascii	"sizetype\000"
+ 459      74797065 
+ 459      00
+ 460              	.LASF6:
+ 461 0274 6C6F6E67 		.ascii	"long long int\000"
+ 461      206C6F6E 
+ 461      6720696E 
+ 461      7400
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccIRp29E.s 			page 13
+
+
+ 462              	.LASF24:
+ 463 0282 4359424C 		.ascii	"CYBLE_BLESS_STATE_DEEPSLEEP\000"
+ 463      455F424C 
+ 463      4553535F 
+ 463      53544154 
+ 463      455F4445 
+ 464              	.LASF16:
+ 465 029e 4359424C 		.ascii	"CYBLE_BLESS_DEEPSLEEP\000"
+ 465      455F424C 
+ 465      4553535F 
+ 465      44454550 
+ 465      534C4545 
+ 466              	.LASF23:
+ 467 02b4 4359424C 		.ascii	"CYBLE_BLESS_STATE_ECO_STABLE\000"
+ 467      455F424C 
+ 467      4553535F 
+ 467      53544154 
+ 467      455F4543 
+ 468              	.LASF2:
+ 469 02d1 73686F72 		.ascii	"short int\000"
+ 469      7420696E 
+ 469      7400
+ 470              	.LASF27:
+ 471 02db 4359424C 		.ascii	"CYBLE_LP_MODE_T\000"
+ 471      455F4C50 
+ 471      5F4D4F44 
+ 471      455F5400 
+ 472              	.LASF4:
+ 473 02eb 6C6F6E67 		.ascii	"long int\000"
+ 473      20696E74 
+ 473      00
+ 474              	.LASF12:
+ 475 02f4 6C6F6E67 		.ascii	"long double\000"
+ 475      20646F75 
+ 475      626C6500 
+ 476              	.LASF0:
+ 477 0300 7369676E 		.ascii	"signed char\000"
+ 477      65642063 
+ 477      68617200 
+ 478              	.LASF14:
+ 479 030c 4359424C 		.ascii	"CYBLE_BLESS_ACTIVE\000"
+ 479      455F424C 
+ 479      4553535F 
+ 479      41435449 
+ 479      564500
+ 480              	.LASF32:
+ 481 031f 48616E64 		.ascii	"HandleLowPower.c\000"
+ 481      6C654C6F 
+ 481      77506F77 
+ 481      65722E63 
+ 481      00
+ 482              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

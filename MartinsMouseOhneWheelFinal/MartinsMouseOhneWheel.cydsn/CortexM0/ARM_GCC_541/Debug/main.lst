@@ -1,0 +1,1747 @@
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.ToogleGREEN,"ax",%progbits
+  20              		.align	2
+  21              		.global	ToogleGREEN
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	ToogleGREEN, %function
+  25              	ToogleGREEN:
+  26              	.LFB35:
+  27              		.file 1 "main.c"
+   1:main.c        **** /******************************************************************************
+   2:main.c        **** * Project Name		: PSoC_4_BLE_Mouse_Slider_LED
+   3:main.c        **** * File Name			: main.c
+   4:main.c        **** * Version 			: 1.0
+   5:main.c        **** * Device Used		: CY8C4247LQI-BL483
+   6:main.c        **** * Software Used		: PSoC Creator 3.3 SP1
+   7:main.c        **** * Compiler    		: ARM GCC 4.9.3, ARM MDK Generic
+   8:main.c        **** * Related Hardware	: CY8CKIT-042-BLE Bluetooth Low Energy Pioneer Kit 
+   9:main.c        **** * Owner             : ROIT
+  10:main.c        **** *
+  11:main.c        **** ********************************************************************************
+  12:main.c        **** * Copyright (2015-16), Cypress Semiconductor Corporation. All Rights Reserved.
+  13:main.c        **** ********************************************************************************
+  14:main.c        **** * This software is owned by Cypress Semiconductor Corporation (Cypress)
+  15:main.c        **** * and is protected by and subject to worldwide patent protection (United
+  16:main.c        **** * States and foreign), United States copyright laws and international treaty
+  17:main.c        **** * provisions. Cypress hereby grants to licensee a personal, non-exclusive,
+  18:main.c        **** * non-transferable license to copy, use, modify, create derivative works of,
+  19:main.c        **** * and compile the Cypress Source Code and derivative works for the sole
+  20:main.c        **** * purpose of creating custom software in support of licensee product to be
+  21:main.c        **** * used only in conjunction with a Cypress integrated circuit as specified in
+  22:main.c        **** * the applicable agreement. Any reproduction, modification, translation,
+  23:main.c        **** * compilation, or representation of this software except as specified above 
+  24:main.c        **** * is prohibited without the express written permission of Cypress.
+  25:main.c        **** *
+  26:main.c        **** * Disclaimer: CYPRESS MAKES NO WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, WITH 
+  27:main.c        **** * REGARD TO THIS MATERIAL, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+  28:main.c        **** * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+  29:main.c        **** * Cypress reserves the right to make changes without further notice to the 
+  30:main.c        **** * materials described herein. Cypress does not assume any liability arising out 
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 2
+
+
+  31:main.c        **** * of the application or use of any product or circuit described herein. Cypress 
+  32:main.c        **** * does not authorize its products for use as critical components in life-support 
+  33:main.c        **** * systems where a malfunction or failure may reasonably be expected to result in 
+  34:main.c        **** * significant injury to the user. The inclusion of Cypress' product in a life-
+  35:main.c        **** * support systems application implies that the manufacturer assumes all risk of 
+  36:main.c        **** * such use and in doing so indemnifies Cypress against all charges. 
+  37:main.c        **** *
+  38:main.c        **** * Use of this Software may be limited by and subject to the applicable Cypress
+  39:main.c        **** * software license agreement. 
+  40:main.c        **** *******************************************************************************/
+  41:main.c        **** 
+  42:main.c        **** /******************************************************************************
+  43:main.c        **** *                           THEORY OF OPERATION
+  44:main.c        **** *******************************************************************************
+  45:main.c        **** * This project will showcase the capability of PSoC 4 BLE to communicate 
+  46:main.c        **** * bi-directionally with a BLE Central device over custom services. The Mouse 
+  47:main.c        **** * custom service allows notifications to be sent to central device when 
+  48:main.c        **** * notifications are enabled. On the other hand, the RGB LED custom service allows 
+  49:main.c        **** * read and write of attributes under the RGB characteristics.
+  50:main.c        **** * This project utilizes Mouse component to check finger position on slider 
+  51:main.c        **** * and report this to central device over BLE. On the other hand, the control values 
+  52:main.c        **** * sent to PSoC 4 BLE is converted to respective color and intensity on the onboard  
+  53:main.c        **** * RGB LED. The BLE central device can be any BLE central device, including CySmart 
+  54:main.c        **** * mobile app or CySmart PC tool. 
+  55:main.c        **** * This project also inludes low power mode operation, idle for battery operated 
+  56:main.c        **** * devices. The project utlizes Deep Sleep feature of both BLESS and CPU to remain 
+  57:main.c        **** * in low power mode as much as possible, while maintaining the BLE connection and  
+  58:main.c        **** * data transfer. This allows the device to run on coin cell battery for long time.
+  59:main.c        **** *
+  60:main.c        **** * Note:
+  61:main.c        **** * The programming pins have been configured as GPIO, and not SWD. This is because 
+  62:main.c        **** * when programming pins are configured for SWD, then the silicon consumes extra
+  63:main.c        **** * power through the pins. To prevent the leakage of power, the pins have been set 
+  64:main.c        **** * to GPIO. With this setting, the kit can still be acquired by PSoC Creator or
+  65:main.c        **** * PSoC Programmer software tools for programming, but the project cannot be 
+  66:main.c        **** * externally debugged. To re-enable debugging, go to PSoC_4_BLE_Mouse_Slider_LED.cydwr 
+  67:main.c        **** * from Workspace Explorer, go to Systems tab, and set the Debug Select option to 'SWD'.
+  68:main.c        **** * Build and program this project to enable external Debugging.
+  69:main.c        **** *
+  70:main.c        **** * Refer to BLE Pioneer Kit user guide for details.
+  71:main.c        **** *******************************************************************************
+  72:main.c        **** * Hardware connection required for testing -
+  73:main.c        **** * Slider pins 	- P2[1]-P2[5] (hard-wired on the BLE Pioneer kit)
+  74:main.c        **** * Cmod pin		- P4[0] (hard-wired on the PSoC 4 BLE module)
+  75:main.c        **** * R-G-B LED 	- P2[6], P3[6] and P3[7] (hard-wired on the BLE Pioneer kit)
+  76:main.c        **** * User Switch	- P2[7] (hard-wired on the BLE Pioneer kit)
+  77:main.c        **** ******************************************************************************/
+  78:main.c        **** #include <main.h>
+  79:main.c        **** 
+  80:main.c        **** // CYBLE 214015-01:     Taster bei 3.5
+  81:main.c        **** // CY8C4247LQI-BL483    Taster bei 2.7
+  82:main.c        **** 
+  83:main.c        **** /* This flag is used by application to know whether a Central 
+  84:main.c        **** * device has been connected. This is updated in BLE event callback 
+  85:main.c        **** * function*/
+  86:main.c        **** extern uint8 deviceConnected;
+  87:main.c        **** 
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 3
+
+
+  88:main.c        **** /*This flag is set when the Central device writes to CCCD of the 
+  89:main.c        **** * Mouse slider Characteristic to enable notifications */
+  90:main.c        **** extern uint8 sendMouseNotifications;
+  91:main.c        **** 
+  92:main.c        **** /* 'restartAdvertisement' flag is used to restart advertisement */
+  93:main.c        **** extern uint8 restartAdvertisement;
+  94:main.c        **** 
+  95:main.c        **** extern volatile uint8 gbCurrentKeys;
+  96:main.c        **** 
+  97:main.c        **** 
+  98:main.c        **** void ToogleGREEN(void)
+  99:main.c        **** {
+  28              		.loc 1 99 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 1, uses_anonymous_args = 0
+  32 0000 80B5     		push	{r7, lr}
+  33              		.cfi_def_cfa_offset 8
+  34              		.cfi_offset 7, -8
+  35              		.cfi_offset 14, -4
+  36 0002 00AF     		add	r7, sp, #0
+  37              		.cfi_def_cfa_register 7
+ 100:main.c        ****     static uint8 bState=0;
+ 101:main.c        ****     bState++;
+  38              		.loc 1 101 0
+  39 0004 0A4B     		ldr	r3, .L5
+  40 0006 1B78     		ldrb	r3, [r3]
+  41 0008 0133     		adds	r3, r3, #1
+  42 000a DAB2     		uxtb	r2, r3
+  43 000c 084B     		ldr	r3, .L5
+  44 000e 1A70     		strb	r2, [r3]
+ 102:main.c        ****     if (bState&1)
+  45              		.loc 1 102 0
+  46 0010 074B     		ldr	r3, .L5
+  47 0012 1B78     		ldrb	r3, [r3]
+  48 0014 1A00     		movs	r2, r3
+  49 0016 0123     		movs	r3, #1
+  50 0018 1340     		ands	r3, r2
+  51 001a 03D0     		beq	.L2
+ 103:main.c        ****         GREEN_ON;
+  52              		.loc 1 103 0
+  53 001c 0620     		movs	r0, #6
+  54 001e FFF7FEFF 		bl	GREEN_SetDriveMode
+ 104:main.c        ****     else
+ 105:main.c        ****         GREEN_OFF;
+ 106:main.c        **** }
+  55              		.loc 1 106 0
+  56 0022 02E0     		b	.L4
+  57              	.L2:
+ 105:main.c        **** }
+  58              		.loc 1 105 0
+  59 0024 0020     		movs	r0, #0
+  60 0026 FFF7FEFF 		bl	GREEN_SetDriveMode
+  61              	.L4:
+  62              		.loc 1 106 0
+  63 002a C046     		nop
+  64 002c BD46     		mov	sp, r7
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 4
+
+
+  65              		@ sp needed
+  66 002e 80BD     		pop	{r7, pc}
+  67              	.L6:
+  68              		.align	2
+  69              	.L5:
+  70 0030 00000000 		.word	bState.7323
+  71              		.cfi_endproc
+  72              	.LFE35:
+  73              		.size	ToogleGREEN, .-ToogleGREEN
+  74              		.section	.text.MyMainButtonsISR,"ax",%progbits
+  75              		.align	2
+  76              		.global	MyMainButtonsISR
+  77              		.code	16
+  78              		.thumb_func
+  79              		.type	MyMainButtonsISR, %function
+  80              	MyMainButtonsISR:
+  81              	.LFB36:
+ 107:main.c        **** 
+ 108:main.c        **** /*******************************************************************************
+ 109:main.c        **** * Function Name: MyISR
+ 110:main.c        **** ********************************************************************************
+ 111:main.c        **** * Summary:
+ 112:main.c        **** *        ISR routine for isr_button. System enters here after CPU wakeup.
+ 113:main.c        **** * Clears pending interrupt.
+ 114:main.c        **** *
+ 115:main.c        **** * Parameters:
+ 116:main.c        **** *  void
+ 117:main.c        **** *
+ 118:main.c        **** * Return:
+ 119:main.c        **** *  void
+ 120:main.c        **** *
+ 121:main.c        **** *******************************************************************************/
+ 122:main.c        **** CY_ISR(MyMainButtonsISR)
+ 123:main.c        **** {
+  82              		.loc 1 123 0
+  83              		.cfi_startproc
+  84              		@ args = 0, pretend = 0, frame = 0
+  85              		@ frame_needed = 1, uses_anonymous_args = 0
+  86 0000 80B5     		push	{r7, lr}
+  87              		.cfi_def_cfa_offset 8
+  88              		.cfi_offset 7, -8
+  89              		.cfi_offset 14, -4
+  90 0002 00AF     		add	r7, sp, #0
+  91              		.cfi_def_cfa_register 7
+ 124:main.c        **** 	/* Clear Pending interrupts */
+ 125:main.c        **** 	isr_buttons_ClearPending();
+  92              		.loc 1 125 0
+  93 0004 FFF7FEFF 		bl	isr_buttons_ClearPending
+ 126:main.c        **** 	Buttons_ClearInterrupt();
+  94              		.loc 1 126 0
+  95 0008 FFF7FEFF 		bl	Buttons_ClearInterrupt
+ 127:main.c        **** //    GREEN_ON;
+ 128:main.c        **** }
+  96              		.loc 1 128 0
+  97 000c C046     		nop
+  98 000e BD46     		mov	sp, r7
+  99              		@ sp needed
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 5
+
+
+ 100 0010 80BD     		pop	{r7, pc}
+ 101              		.cfi_endproc
+ 102              	.LFE36:
+ 103              		.size	MyMainButtonsISR, .-MyMainButtonsISR
+ 104 0012 C046     		.section	.text.MyMidButtonISR,"ax",%progbits
+ 105              		.align	2
+ 106              		.global	MyMidButtonISR
+ 107              		.code	16
+ 108              		.thumb_func
+ 109              		.type	MyMidButtonISR, %function
+ 110              	MyMidButtonISR:
+ 111              	.LFB37:
+ 129:main.c        **** 
+ 130:main.c        **** CY_ISR(MyMidButtonISR)
+ 131:main.c        **** {
+ 112              		.loc 1 131 0
+ 113              		.cfi_startproc
+ 114              		@ args = 0, pretend = 0, frame = 0
+ 115              		@ frame_needed = 1, uses_anonymous_args = 0
+ 116 0000 80B5     		push	{r7, lr}
+ 117              		.cfi_def_cfa_offset 8
+ 118              		.cfi_offset 7, -8
+ 119              		.cfi_offset 14, -4
+ 120 0002 00AF     		add	r7, sp, #0
+ 121              		.cfi_def_cfa_register 7
+ 132:main.c        ****     isr_mid_button_ClearPending();
+ 122              		.loc 1 132 0
+ 123 0004 FFF7FEFF 		bl	isr_mid_button_ClearPending
+ 133:main.c        ****     Mid_Button_ClearInterrupt();
+ 124              		.loc 1 133 0
+ 125 0008 FFF7FEFF 		bl	Mid_Button_ClearInterrupt
+ 134:main.c        **** }
+ 126              		.loc 1 134 0
+ 127 000c C046     		nop
+ 128 000e BD46     		mov	sp, r7
+ 129              		@ sp needed
+ 130 0010 80BD     		pop	{r7, pc}
+ 131              		.cfi_endproc
+ 132              	.LFE37:
+ 133              		.size	MyMidButtonISR, .-MyMidButtonISR
+ 134 0012 C046     		.section	.text.MyRightButtonISR,"ax",%progbits
+ 135              		.align	2
+ 136              		.global	MyRightButtonISR
+ 137              		.code	16
+ 138              		.thumb_func
+ 139              		.type	MyRightButtonISR, %function
+ 140              	MyRightButtonISR:
+ 141              	.LFB38:
+ 135:main.c        **** 
+ 136:main.c        **** CY_ISR(MyRightButtonISR)
+ 137:main.c        **** {
+ 142              		.loc 1 137 0
+ 143              		.cfi_startproc
+ 144              		@ args = 0, pretend = 0, frame = 0
+ 145              		@ frame_needed = 1, uses_anonymous_args = 0
+ 146 0000 80B5     		push	{r7, lr}
+ 147              		.cfi_def_cfa_offset 8
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 6
+
+
+ 148              		.cfi_offset 7, -8
+ 149              		.cfi_offset 14, -4
+ 150 0002 00AF     		add	r7, sp, #0
+ 151              		.cfi_def_cfa_register 7
+ 138:main.c        **** //    isr_right_button_ClearPending();
+ 139:main.c        **** //    Right_Button_ClearInterrupt();
+ 140:main.c        **** }
+ 152              		.loc 1 140 0
+ 153 0004 C046     		nop
+ 154 0006 BD46     		mov	sp, r7
+ 155              		@ sp needed
+ 156 0008 80BD     		pop	{r7, pc}
+ 157              		.cfi_endproc
+ 158              	.LFE38:
+ 159              		.size	MyRightButtonISR, .-MyRightButtonISR
+ 160              		.section	.text.main,"ax",%progbits
+ 161              		.align	2
+ 162              		.global	main
+ 163              		.code	16
+ 164              		.thumb_func
+ 165              		.type	main, %function
+ 166              	main:
+ 167              	.LFB39:
+ 141:main.c        **** 
+ 142:main.c        **** /*******************************************************************************
+ 143:main.c        **** * Function Name: main
+ 144:main.c        **** ********************************************************************************
+ 145:main.c        **** * Summary:
+ 146:main.c        **** *        System entrance point. This calls the initializing function and
+ 147:main.c        **** * continuously process BLE and Mouse events.
+ 148:main.c        **** *
+ 149:main.c        **** * Parameters:
+ 150:main.c        **** *  void
+ 151:main.c        **** *
+ 152:main.c        **** * Return:
+ 153:main.c        **** *  int
+ 154:main.c        **** *
+ 155:main.c        **** 
+ 156:main.c        **** *******************************************************************************/
+ 157:main.c        **** int main()
+ 158:main.c        **** {
+ 168              		.loc 1 158 0
+ 169              		.cfi_startproc
+ 170              		@ args = 0, pretend = 0, frame = 0
+ 171              		@ frame_needed = 1, uses_anonymous_args = 0
+ 172 0000 80B5     		push	{r7, lr}
+ 173              		.cfi_def_cfa_offset 8
+ 174              		.cfi_offset 7, -8
+ 175              		.cfi_offset 14, -4
+ 176 0002 00AF     		add	r7, sp, #0
+ 177              		.cfi_def_cfa_register 7
+ 159:main.c        ****     static bool bIsKeyWTD_Started=false;
+ 160:main.c        ****     
+ 161:main.c        **** 	/* This function will initialize the system resources such as BLE and Mouse */
+ 162:main.c        ****     InitializeSystem();
+ 178              		.loc 1 162 0
+ 179 0004 FFF7FEFF 		bl	InitializeSystem
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 7
+
+
+ 180              	.L16:
+ 163:main.c        **** 	
+ 164:main.c        ****     while(1)
+ 165:main.c        ****     {
+ 166:main.c        ****         /*Process event callback to handle BLE events. The events generated and 
+ 167:main.c        **** 		* used for this application are inside the 'CustomEventHandler' routine*/
+ 168:main.c        ****         CyBle_ProcessEvents();
+ 181              		.loc 1 168 0
+ 182 0008 FFF7FEFF 		bl	CyBle_ProcessEvents
+ 169:main.c        **** 		
+ 170:main.c        **** 		/* Updated LED for status during BLE active states */
+ 171:main.c        **** 		HandleStatusLED();
+ 183              		.loc 1 171 0
+ 184 000c FFF7FEFF 		bl	HandleStatusLED
+ 172:main.c        **** 		
+ 173:main.c        ****         //ToogleGREEN();
+ 174:main.c        ****         
+ 175:main.c        **** 		if(TRUE == deviceConnected)
+ 185              		.loc 1 175 0
+ 186 0010 1E4B     		ldr	r3, .L17
+ 187 0012 1B78     		ldrb	r3, [r3]
+ 188 0014 012B     		cmp	r3, #1
+ 189 0016 1BD1     		bne	.L11
+ 176:main.c        **** 		{
+ 177:main.c        **** 			/* After the connection, send new connection parameter to the Client device 
+ 178:main.c        **** 			* to run the BLE communication on desired interval. This affects the data rate 
+ 179:main.c        **** 			* and power consumption. High connection interval will have lower data rate but 
+ 180:main.c        **** 			* lower power consumption. Low connection interval will have higher data rate at
+ 181:main.c        **** 			* expense of higher power. This function is called only once per connection. */
+ 182:main.c        **** 			UpdateConnectionParam();
+ 190              		.loc 1 182 0
+ 191 0018 FFF7FEFF 		bl	UpdateConnectionParam
+ 183:main.c        **** 			
+ 184:main.c        **** 			/* Send Mouse Slider data when respective notification is enabled */
+ 185:main.c        **** 			if(sendMouseNotifications == CCCD_NTF_BIT_MASK)
+ 192              		.loc 1 185 0
+ 193 001c 1C4B     		ldr	r3, .L17+4
+ 194 001e 1B78     		ldrb	r3, [r3]
+ 195 0020 012B     		cmp	r3, #1
+ 196 0022 25D1     		bne	.L14
+ 186:main.c        **** 			{
+ 187:main.c        ****                 if (!bIsKeyWTD_Started)
+ 197              		.loc 1 187 0
+ 198 0024 1B4B     		ldr	r3, .L17+8
+ 199 0026 1B78     		ldrb	r3, [r3]
+ 200 0028 0122     		movs	r2, #1
+ 201 002a 5340     		eors	r3, r2
+ 202 002c DBB2     		uxtb	r3, r3
+ 203 002e 002B     		cmp	r3, #0
+ 204 0030 0BD0     		beq	.L13
+ 188:main.c        ****                 {
+ 189:main.c        ****                     /* Unlock the WDT registers for modification */
+ 190:main.c        ****             		CySysWdtUnlock();
+ 205              		.loc 1 190 0
+ 206 0032 FFF7FEFF 		bl	CySysWdtUnlock
+ 191:main.c        ****             		
+ 192:main.c        ****             		/* Disable Counter 0 to allow modifications */
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 8
+
+
+ 193:main.c        ****             		CySysWdtEnable(CY_SYS_WDT_COUNTER1_MASK);
+ 207              		.loc 1 193 0
+ 208 0036 8023     		movs	r3, #128
+ 209 0038 5B00     		lsls	r3, r3, #1
+ 210 003a 1800     		movs	r0, r3
+ 211 003c FFF7FEFF 		bl	CySysWdtEnable
+ 194:main.c        ****                     		/* Lock Watchdog to prevent any further change */
+ 195:main.c        ****             	    CySysWdtLock();
+ 212              		.loc 1 195 0
+ 213 0040 FFF7FEFF 		bl	CySysWdtLock
+ 196:main.c        ****                     bIsKeyWTD_Started = true;
+ 214              		.loc 1 196 0
+ 215 0044 134B     		ldr	r3, .L17+8
+ 216 0046 0122     		movs	r2, #1
+ 217 0048 1A70     		strb	r2, [r3]
+ 218              	.L13:
+ 197:main.c        ****         		}
+ 198:main.c        ****                 // Bewusst nicht gechecked, denn slave-latency ist 100
+ 199:main.c        ****                 // so würden also 100*40ms bis etwas gesendet wird
+ 200:main.c        ****                 // das ist so natürlich nicht erwünscht!!
+ 201:main.c        **** 				// if(CYBLE_BLESS_STATE_ECO_STABLE ==CyBle_GetBleSsState())
+ 202:main.c        **** 			    HandleMouse();      // hier die Mouse-Daten übertragen
+ 219              		.loc 1 202 0
+ 220 004a FFF7FEFF 		bl	HandleMouse
+ 221 004e 0FE0     		b	.L14
+ 222              	.L11:
+ 203:main.c        **** 			}
+ 204:main.c        **** 		}
+ 205:main.c        ****         else if (bIsKeyWTD_Started)
+ 223              		.loc 1 205 0
+ 224 0050 104B     		ldr	r3, .L17+8
+ 225 0052 1B78     		ldrb	r3, [r3]
+ 226 0054 002B     		cmp	r3, #0
+ 227 0056 0BD0     		beq	.L14
+ 206:main.c        ****         {
+ 207:main.c        ****             /* Unlock the WDT registers for modification */
+ 208:main.c        ****     		CySysWdtUnlock();
+ 228              		.loc 1 208 0
+ 229 0058 FFF7FEFF 		bl	CySysWdtUnlock
+ 209:main.c        ****     		
+ 210:main.c        ****     		/* Disable Counter 0 to allow modifications */
+ 211:main.c        ****     		CySysWdtDisable(CY_SYS_WDT_COUNTER1_MASK);
+ 230              		.loc 1 211 0
+ 231 005c 8023     		movs	r3, #128
+ 232 005e 5B00     		lsls	r3, r3, #1
+ 233 0060 1800     		movs	r0, r3
+ 234 0062 FFF7FEFF 		bl	CySysWdtDisable
+ 212:main.c        ****             		/* Lock Watchdog to prevent any further change */
+ 213:main.c        ****     	    CySysWdtLock();
+ 235              		.loc 1 213 0
+ 236 0066 FFF7FEFF 		bl	CySysWdtLock
+ 214:main.c        ****             bIsKeyWTD_Started = false;
+ 237              		.loc 1 214 0
+ 238 006a 0A4B     		ldr	r3, .L17+8
+ 239 006c 0022     		movs	r2, #0
+ 240 006e 1A70     		strb	r2, [r3]
+ 241              	.L14:
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 9
+
+
+ 215:main.c        **** 		}
+ 216:main.c        ****         
+ 217:main.c        **** 		#ifdef ENABLE_LOW_POWER_MODE
+ 218:main.c        **** 			/* Put system to Deep sleep, including BLESS, and wakeup on interrupt. 
+ 219:main.c        **** 			* The source of the interrupt can be either BLESS Link Layer in case of 
+ 220:main.c        **** 			* BLE advertisement and connection or by User Button press during BLE 
+ 221:main.c        **** 			* disconnection */
+ 222:main.c        **** 			HandleLowPowerMode();
+ 242              		.loc 1 222 0
+ 243 0070 FFF7FEFF 		bl	HandleLowPowerMode
+ 223:main.c        **** 		#endif
+ 224:main.c        **** 		
+ 225:main.c        **** 		if(restartAdvertisement)
+ 244              		.loc 1 225 0
+ 245 0074 084B     		ldr	r3, .L17+12
+ 246 0076 1B78     		ldrb	r3, [r3]
+ 247 0078 002B     		cmp	r3, #0
+ 248 007a C5D0     		beq	.L16
+ 226:main.c        **** 		{
+ 227:main.c        **** 			/* Reset 'restartAdvertisement' flag*/
+ 228:main.c        **** 			restartAdvertisement = FALSE;
+ 249              		.loc 1 228 0
+ 250 007c 064B     		ldr	r3, .L17+12
+ 251 007e 0022     		movs	r2, #0
+ 252 0080 1A70     		strb	r2, [r3]
+ 229:main.c        **** 			
+ 230:main.c        **** 			/* Start Advertisement and enter Discoverable mode*/
+ 231:main.c        **** 			CyBle_GappStartAdvertisement(CYBLE_ADVERTISING_FAST);	
+ 253              		.loc 1 231 0
+ 254 0082 0020     		movs	r0, #0
+ 255 0084 FFF7FEFF 		bl	CyBle_GappStartAdvertisement
+ 232:main.c        **** 		}
+ 233:main.c        ****     }	/* End of for(;;) */
+ 256              		.loc 1 233 0
+ 257 0088 BEE7     		b	.L16
+ 258              	.L18:
+ 259 008a C046     		.align	2
+ 260              	.L17:
+ 261 008c 00000000 		.word	deviceConnected
+ 262 0090 00000000 		.word	sendMouseNotifications
+ 263 0094 01000000 		.word	bIsKeyWTD_Started.7335
+ 264 0098 00000000 		.word	restartAdvertisement
+ 265              		.cfi_endproc
+ 266              	.LFE39:
+ 267              		.size	main, .-main
+ 268              		.section	.text.InitializeSystem,"ax",%progbits
+ 269              		.align	2
+ 270              		.global	InitializeSystem
+ 271              		.code	16
+ 272              		.thumb_func
+ 273              		.type	InitializeSystem, %function
+ 274              	InitializeSystem:
+ 275              	.LFB40:
+ 234:main.c        **** }
+ 235:main.c        **** 
+ 236:main.c        **** /*******************************************************************************
+ 237:main.c        **** * Function Name: InitializeSystem
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 10
+
+
+ 238:main.c        **** ********************************************************************************
+ 239:main.c        **** * Summary:
+ 240:main.c        **** *        Start the components and initialize system 
+ 241:main.c        **** *
+ 242:main.c        **** * Parameters:
+ 243:main.c        **** *  void
+ 244:main.c        **** *
+ 245:main.c        **** * Return:
+ 246:main.c        **** *  void
+ 247:main.c        **** *
+ 248:main.c        **** *******************************************************************************/
+ 249:main.c        **** void InitializeSystem(void)
+ 250:main.c        **** {
+ 276              		.loc 1 250 0
+ 277              		.cfi_startproc
+ 278              		@ args = 0, pretend = 0, frame = 8
+ 279              		@ frame_needed = 1, uses_anonymous_args = 0
+ 280 0000 80B5     		push	{r7, lr}
+ 281              		.cfi_def_cfa_offset 8
+ 282              		.cfi_offset 7, -8
+ 283              		.cfi_offset 14, -4
+ 284 0002 82B0     		sub	sp, sp, #8
+ 285              		.cfi_def_cfa_offset 16
+ 286 0004 00AF     		add	r7, sp, #0
+ 287              		.cfi_def_cfa_register 7
+ 251:main.c        ****     /* Unfreeze IO-Cells */
+ 252:main.c        ****     CySysPmUnfreezeIo();
+ 288              		.loc 1 252 0
+ 289 0006 FFF7FEFF 		bl	CySysPmUnfreezeIo
+ 253:main.c        ****     
+ 254:main.c        **** 	/* Enable global interrupt mask */
+ 255:main.c        **** 	CyGlobalIntEnable; 
+ 290              		.loc 1 255 0
+ 291              		.syntax divided
+ 292              	@ 255 "main.c" 1
+ 293 000a 62B6     		CPSIE   i
+ 294              	@ 0 "" 2
+ 256:main.c        **** 
+ 257:main.c        ****     RED_Write(0);               // LED gegen VDD (+3V) geschaltet
+ 295              		.loc 1 257 0
+ 296              		.thumb
+ 297              		.syntax unified
+ 298 000c 0020     		movs	r0, #0
+ 299 000e FFF7FEFF 		bl	RED_Write
+ 258:main.c        ****     GREEN_Write(0);
+ 300              		.loc 1 258 0
+ 301 0012 0020     		movs	r0, #0
+ 302 0014 FFF7FEFF 		bl	GREEN_Write
+ 259:main.c        ****     BLUE_Write(0);
+ 303              		.loc 1 259 0
+ 304 0018 0020     		movs	r0, #0
+ 305 001a FFF7FEFF 		bl	BLUE_Write
+ 260:main.c        ****     
+ 261:main.c        ****     RED_ON;
+ 306              		.loc 1 261 0
+ 307 001e 0620     		movs	r0, #6
+ 308 0020 FFF7FEFF 		bl	RED_SetDriveMode
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 11
+
+
+ 262:main.c        ****     
+ 263:main.c        ****     // Damit das Ein/Auschalten über den Drive-Mode sicher funktioniert
+ 264:main.c        ****     //PWM_Start();
+ 265:main.c        ****     //CyDelay(100);
+ 266:main.c        ****     //MouseWheel_Stop();
+ 267:main.c        ****     
+ 268:main.c        **** 	/* Set the Watchdog Interrupt vector to the address of Interrupt routine 
+ 269:main.c        **** 	* WDT_INT_Handler. This routine counts the 3 seconds for LED ON state during
+ 270:main.c        **** 	* connection. */
+ 271:main.c        **** 	CyIntSetVector(WATCHDOG_INT_VEC_NUM, &WDT_INT_Handler);
+ 309              		.loc 1 271 0
+ 310 0024 274B     		ldr	r3, .L27
+ 311 0026 1900     		movs	r1, r3
+ 312 0028 0820     		movs	r0, #8
+ 313 002a FFF7FEFF 		bl	CyIntSetVector
+ 272:main.c        ****     
+ 273:main.c        ****     /* Start the Button ISR to allow wakeup from sleep */
+ 274:main.c        **** 	isr_buttons_StartEx(MyMainButtonsISR);
+ 314              		.loc 1 274 0
+ 315 002e 264B     		ldr	r3, .L27+4
+ 316 0030 1800     		movs	r0, r3
+ 317 0032 FFF7FEFF 		bl	isr_buttons_StartEx
+ 275:main.c        ****     isr_mid_button_StartEx(MyMidButtonISR);
+ 318              		.loc 1 275 0
+ 319 0036 254B     		ldr	r3, .L27+8
+ 320 0038 1800     		movs	r0, r3
+ 321 003a FFF7FEFF 		bl	isr_mid_button_StartEx
+ 276:main.c        ****     //isr_right_button_StartEx(MyRightButtonISR);
+ 277:main.c        **** 
+ 278:main.c        ****     RED_ON;
+ 322              		.loc 1 278 0
+ 323 003e 0620     		movs	r0, #6
+ 324 0040 FFF7FEFF 		bl	RED_SetDriveMode
+ 279:main.c        ****     
+ 280:main.c        ****     /* Retrieve and print last reset reason */
+ 281:main.c        ****     uint32 reason = CySysPmGetResetReason();
+ 325              		.loc 1 281 0
+ 326 0044 FFF7FEFF 		bl	CySysPmGetResetReason
+ 327 0048 0300     		movs	r3, r0
+ 328 004a 7B60     		str	r3, [r7, #4]
+ 282:main.c        ****     switch (reason)    
+ 329              		.loc 1 282 0
+ 330 004c 7B68     		ldr	r3, [r7, #4]
+ 331 004e 022B     		cmp	r3, #2
+ 332 0050 09D0     		beq	.L21
+ 333 0052 032B     		cmp	r3, #3
+ 334 0054 1FD1     		bne	.L26
+ 283:main.c        ****     {
+ 284:main.c        ****         case CY_PM_RESET_REASON_WAKEUP_STOP:
+ 285:main.c        ****             CyDelay(3000);
+ 335              		.loc 1 285 0
+ 336 0056 1E4B     		ldr	r3, .L27+12
+ 337 0058 1800     		movs	r0, r3
+ 338 005a FFF7FEFF 		bl	CyDelay
+ 286:main.c        ****             RED_OFF;
+ 339              		.loc 1 286 0
+ 340 005e 0020     		movs	r0, #0
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 12
+
+
+ 341 0060 FFF7FEFF 		bl	RED_SetDriveMode
+ 287:main.c        ****             break;
+ 342              		.loc 1 287 0
+ 343 0064 26E0     		b	.L23
+ 344              	.L21:
+ 288:main.c        ****         case CY_PM_RESET_REASON_WAKEUP_HIB:
+ 289:main.c        ****             /* Start BLE component and register the CustomEventHandler function. This 
+ 290:main.c        ****         	* function exposes the events from BLE component for application use */
+ 291:main.c        ****             CyBle_Start(CustomEventHandler);
+ 345              		.loc 1 291 0
+ 346 0066 1B4B     		ldr	r3, .L27+16
+ 347 0068 1800     		movs	r0, r3
+ 348 006a FFF7FEFF 		bl	CyBle_Start
+ 292:main.c        ****             while (restartAdvertisement==false)
+ 349              		.loc 1 292 0
+ 350 006e 01E0     		b	.L24
+ 351              	.L25:
+ 293:main.c        ****                 CyBle_ProcessEvents();
+ 352              		.loc 1 293 0
+ 353 0070 FFF7FEFF 		bl	CyBle_ProcessEvents
+ 354              	.L24:
+ 292:main.c        ****             while (restartAdvertisement==false)
+ 355              		.loc 1 292 0
+ 356 0074 184B     		ldr	r3, .L27+20
+ 357 0076 1B78     		ldrb	r3, [r3]
+ 358 0078 002B     		cmp	r3, #0
+ 359 007a F9D0     		beq	.L25
+ 294:main.c        ****             RED_OFF;
+ 360              		.loc 1 294 0
+ 361 007c 0020     		movs	r0, #0
+ 362 007e FFF7FEFF 		bl	RED_SetDriveMode
+ 295:main.c        **** 
+ 296:main.c        ****             GREEN_OFF;
+ 363              		.loc 1 296 0
+ 364 0082 0020     		movs	r0, #0
+ 365 0084 FFF7FEFF 		bl	GREEN_SetDriveMode
+ 297:main.c        ****             
+ 298:main.c        ****             /* Reset 'restartAdvertisement' flag*/
+ 299:main.c        **** 			restartAdvertisement = FALSE;
+ 366              		.loc 1 299 0
+ 367 0088 134B     		ldr	r3, .L27+20
+ 368 008a 0022     		movs	r2, #0
+ 369 008c 1A70     		strb	r2, [r3]
+ 300:main.c        **** 			
+ 301:main.c        **** 			/* Start Advertisement and enter Discoverable mode*/
+ 302:main.c        **** 			CyBle_GappStartAdvertisement(CYBLE_ADVERTISING_FAST);	
+ 370              		.loc 1 302 0
+ 371 008e 0020     		movs	r0, #0
+ 372 0090 FFF7FEFF 		bl	CyBle_GappStartAdvertisement
+ 303:main.c        ****             break;
+ 373              		.loc 1 303 0
+ 374 0094 0EE0     		b	.L23
+ 375              	.L26:
+ 304:main.c        ****             
+ 305:main.c        ****         default:
+ 306:main.c        ****         case CY_PM_RESET_REASON_XRES:
+ 307:main.c        ****             CyDelay(500);
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 13
+
+
+ 376              		.loc 1 307 0
+ 377 0096 FA23     		movs	r3, #250
+ 378 0098 5B00     		lsls	r3, r3, #1
+ 379 009a 1800     		movs	r0, r3
+ 380 009c FFF7FEFF 		bl	CyDelay
+ 308:main.c        ****             RED_OFF;
+ 381              		.loc 1 308 0
+ 382 00a0 0020     		movs	r0, #0
+ 383 00a2 FFF7FEFF 		bl	RED_SetDriveMode
+ 309:main.c        ****             GREEN_ON;
+ 384              		.loc 1 309 0
+ 385 00a6 0620     		movs	r0, #6
+ 386 00a8 FFF7FEFF 		bl	GREEN_SetDriveMode
+ 310:main.c        ****             
+ 311:main.c        ****             /* Freeze IO-Cells */
+ 312:main.c        ****             CySysPmFreezeIo();
+ 387              		.loc 1 312 0
+ 388 00ac FFF7FEFF 		bl	CySysPmFreezeIo
+ 313:main.c        ****             CySysPmHibernate();
+ 389              		.loc 1 313 0
+ 390 00b0 FFF7FEFF 		bl	CySysPmHibernate
+ 391              	.L23:
+ 314:main.c        ****             // hier kommen wir nicht mehr hin
+ 315:main.c        ****     }
+ 316:main.c        ****     RED_OFF;
+ 392              		.loc 1 316 0
+ 393 00b4 0020     		movs	r0, #0
+ 394 00b6 FFF7FEFF 		bl	RED_SetDriveMode
+ 317:main.c        **** }
+ 395              		.loc 1 317 0
+ 396 00ba C046     		nop
+ 397 00bc BD46     		mov	sp, r7
+ 398 00be 02B0     		add	sp, sp, #8
+ 399              		@ sp needed
+ 400 00c0 80BD     		pop	{r7, pc}
+ 401              	.L28:
+ 402 00c2 C046     		.align	2
+ 403              	.L27:
+ 404 00c4 00000000 		.word	WDT_INT_Handler
+ 405 00c8 00000000 		.word	MyMainButtonsISR
+ 406 00cc 00000000 		.word	MyMidButtonISR
+ 407 00d0 B80B0000 		.word	3000
+ 408 00d4 00000000 		.word	CustomEventHandler
+ 409 00d8 00000000 		.word	restartAdvertisement
+ 410              		.cfi_endproc
+ 411              	.LFE40:
+ 412              		.size	InitializeSystem, .-InitializeSystem
+ 413              		.section	.text.HandleMouse,"ax",%progbits
+ 414              		.align	2
+ 415              		.global	HandleMouse
+ 416              		.code	16
+ 417              		.thumb_func
+ 418              		.type	HandleMouse, %function
+ 419              	HandleMouse:
+ 420              	.LFB41:
+ 318:main.c        **** 
+ 319:main.c        **** 
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 14
+
+
+ 320:main.c        **** 
+ 321:main.c        **** /*******************************************************************************
+ 322:main.c        **** * Function Name: HandleMouse
+ 323:main.c        **** ********************************************************************************
+ 324:main.c        **** * Summary:
+ 325:main.c        **** * This function scans for pushed Buttons and MouseWeehlPosition  
+ 326:main.c        **** * If position is different, triggers separate routine for BLE notification
+ 327:main.c        **** *
+ 328:main.c        **** * Parameters:
+ 329:main.c        **** *  void
+ 330:main.c        **** *
+ 331:main.c        **** * Return:
+ 332:main.c        **** *  void
+ 333:main.c        **** *
+ 334:main.c        **** *******************************************************************************/
+ 335:main.c        **** void HandleMouse(void)
+ 336:main.c        **** {
+ 421              		.loc 1 336 0
+ 422              		.cfi_startproc
+ 423              		@ args = 0, pretend = 0, frame = 8
+ 424              		@ frame_needed = 1, uses_anonymous_args = 0
+ 425 0000 80B5     		push	{r7, lr}
+ 426              		.cfi_def_cfa_offset 8
+ 427              		.cfi_offset 7, -8
+ 428              		.cfi_offset 14, -4
+ 429 0002 82B0     		sub	sp, sp, #8
+ 430              		.cfi_def_cfa_offset 16
+ 431 0004 00AF     		add	r7, sp, #0
+ 432              		.cfi_def_cfa_register 7
+ 337:main.c        ****     static uint8 bLastButton;
+ 338:main.c        ****     static uint8 bLastMouseWheel = 0;
+ 339:main.c        **** 
+ 340:main.c        ****     // Hier die Mouse-Buttons abfragen
+ 341:main.c        ****     uint8 bCurButton     = gbCurrentKeys;
+ 433              		.loc 1 341 0
+ 434 0006 FB1D     		adds	r3, r7, #7
+ 435 0008 144A     		ldr	r2, .L32
+ 436 000a 1278     		ldrb	r2, [r2]
+ 437 000c 1A70     		strb	r2, [r3]
+ 342:main.c        ****     uint8 bCurMouseWeehl = 0; //MouseWheel_GetPosition();
+ 438              		.loc 1 342 0
+ 439 000e BB1D     		adds	r3, r7, #6
+ 440 0010 0022     		movs	r2, #0
+ 441 0012 1A70     		strb	r2, [r3]
+ 343:main.c        ****     
+ 344:main.c        ****     if (CyBle_GattGetBusyStatus() == CYBLE_STACK_STATE_FREE)
+ 442              		.loc 1 344 0
+ 443 0014 124B     		ldr	r3, .L32+4
+ 444 0016 1B78     		ldrb	r3, [r3]
+ 445 0018 DBB2     		uxtb	r3, r3
+ 446 001a 002B     		cmp	r3, #0
+ 447 001c 19D1     		bne	.L31
+ 345:main.c        ****     {
+ 346:main.c        ****         //if (bLastButton != bCurButton || bLastMouseWheel != bCurMouseWeehl)
+ 347:main.c        ****         if (bLastButton != bCurButton)
+ 448              		.loc 1 347 0
+ 449 001e 114B     		ldr	r3, .L32+8
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 15
+
+
+ 450 0020 1B78     		ldrb	r3, [r3]
+ 451 0022 FA1D     		adds	r2, r7, #7
+ 452 0024 1278     		ldrb	r2, [r2]
+ 453 0026 9A42     		cmp	r2, r3
+ 454 0028 13D0     		beq	.L31
+ 455              	.LBB2:
+ 348:main.c        ****         {
+ 349:main.c        ****             //ToogleGREEN();
+ 350:main.c        **** 
+ 351:main.c        ****             // hier nun die static-Variablen updaten
+ 352:main.c        ****             bLastButton     = bCurButton;
+ 456              		.loc 1 352 0
+ 457 002a 0E4B     		ldr	r3, .L32+8
+ 458 002c FA1D     		adds	r2, r7, #7
+ 459 002e 1278     		ldrb	r2, [r2]
+ 460 0030 1A70     		strb	r2, [r3]
+ 353:main.c        ****             bLastMouseWheel = bCurMouseWeehl;
+ 461              		.loc 1 353 0
+ 462 0032 0D4B     		ldr	r3, .L32+12
+ 463 0034 BA1D     		adds	r2, r7, #6
+ 464 0036 1278     		ldrb	r2, [r2]
+ 465 0038 1A70     		strb	r2, [r3]
+ 354:main.c        **** 
+ 355:main.c        ****             // Mouse-Data has 2 Bytes: Byte[0]=Button Byte[1]=Position
+ 356:main.c        ****             static uint8 bMouseData[2];
+ 357:main.c        ****             bMouseData[0] = bLastButton;
+ 466              		.loc 1 357 0
+ 467 003a 0A4B     		ldr	r3, .L32+8
+ 468 003c 1A78     		ldrb	r2, [r3]
+ 469 003e 0B4B     		ldr	r3, .L32+16
+ 470 0040 1A70     		strb	r2, [r3]
+ 358:main.c        ****             bMouseData[1] = bLastMouseWheel;          // hier war das Mouse-Wheel vorgesehen
+ 471              		.loc 1 358 0
+ 472 0042 094B     		ldr	r3, .L32+12
+ 473 0044 1A78     		ldrb	r2, [r3]
+ 474 0046 094B     		ldr	r3, .L32+16
+ 475 0048 5A70     		strb	r2, [r3, #1]
+ 359:main.c        ****             SendDataOverMouseNotification(bMouseData);
+ 476              		.loc 1 359 0
+ 477 004a 084B     		ldr	r3, .L32+16
+ 478 004c 1800     		movs	r0, r3
+ 479 004e FFF7FEFF 		bl	SendDataOverMouseNotification
+ 480              	.L31:
+ 481              	.LBE2:
+ 360:main.c        ****         }
+ 361:main.c        ****     }
+ 362:main.c        **** }
+ 482              		.loc 1 362 0
+ 483 0052 C046     		nop
+ 484 0054 BD46     		mov	sp, r7
+ 485 0056 02B0     		add	sp, sp, #8
+ 486              		@ sp needed
+ 487 0058 80BD     		pop	{r7, pc}
+ 488              	.L33:
+ 489 005a C046     		.align	2
+ 490              	.L32:
+ 491 005c 00000000 		.word	gbCurrentKeys
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 16
+
+
+ 492 0060 00000000 		.word	cyBle_busyStatus
+ 493 0064 02000000 		.word	bLastButton.7352
+ 494 0068 03000000 		.word	bLastMouseWheel.7353
+ 495 006c 04000000 		.word	bMouseData.7356
+ 496              		.cfi_endproc
+ 497              	.LFE41:
+ 498              		.size	HandleMouse, .-HandleMouse
+ 499              		.bss
+ 500              	bState.7323:
+ 501 0000 00       		.space	1
+ 502              	bIsKeyWTD_Started.7335:
+ 503 0001 00       		.space	1
+ 504              	bLastButton.7352:
+ 505 0002 00       		.space	1
+ 506              	bLastMouseWheel.7353:
+ 507 0003 00       		.space	1
+ 508              		.align	2
+ 509              	bMouseData.7356:
+ 510 0004 0000     		.space	2
+ 511              		.text
+ 512              	.Letext0:
+ 513              		.file 2 "Generated_Source\\PSoC4/cytypes.h"
+ 514              		.file 3 "Generated_Source\\PSoC4/BLE_eventHandler.h"
+ 515              		.section	.debug_info,"",%progbits
+ 516              	.Ldebug_info0:
+ 517 0000 16020000 		.4byte	0x216
+ 518 0004 0400     		.2byte	0x4
+ 519 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 520 000a 04       		.byte	0x4
+ 521 000b 01       		.uleb128 0x1
+ 522 000c 51010000 		.4byte	.LASF37
+ 523 0010 0C       		.byte	0xc
+ 524 0011 6F020000 		.4byte	.LASF38
+ 525 0015 6C000000 		.4byte	.LASF39
+ 526 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 527 001d 00000000 		.4byte	0
+ 528 0021 00000000 		.4byte	.Ldebug_line0
+ 529 0025 02       		.uleb128 0x2
+ 530 0026 01       		.byte	0x1
+ 531 0027 06       		.byte	0x6
+ 532 0028 AB020000 		.4byte	.LASF0
+ 533 002c 02       		.uleb128 0x2
+ 534 002d 01       		.byte	0x1
+ 535 002e 08       		.byte	0x8
+ 536 002f F3000000 		.4byte	.LASF1
+ 537 0033 02       		.uleb128 0x2
+ 538 0034 02       		.byte	0x2
+ 539 0035 05       		.byte	0x5
+ 540 0036 5B000000 		.4byte	.LASF2
+ 541 003a 02       		.uleb128 0x2
+ 542 003b 02       		.byte	0x2
+ 543 003c 07       		.byte	0x7
+ 544 003d 48000000 		.4byte	.LASF3
+ 545 0041 02       		.uleb128 0x2
+ 546 0042 04       		.byte	0x4
+ 547 0043 05       		.byte	0x5
+ 548 0044 96020000 		.4byte	.LASF4
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 17
+
+
+ 549 0048 02       		.uleb128 0x2
+ 550 0049 04       		.byte	0x4
+ 551 004a 07       		.byte	0x7
+ 552 004b 29010000 		.4byte	.LASF5
+ 553 004f 02       		.uleb128 0x2
+ 554 0050 08       		.byte	0x8
+ 555 0051 05       		.byte	0x5
+ 556 0052 61020000 		.4byte	.LASF6
+ 557 0056 02       		.uleb128 0x2
+ 558 0057 08       		.byte	0x8
+ 559 0058 07       		.byte	0x7
+ 560 0059 DC000000 		.4byte	.LASF7
+ 561 005d 03       		.uleb128 0x3
+ 562 005e 04       		.byte	0x4
+ 563 005f 05       		.byte	0x5
+ 564 0060 696E7400 		.ascii	"int\000"
+ 565 0064 02       		.uleb128 0x2
+ 566 0065 04       		.byte	0x4
+ 567 0066 07       		.byte	0x7
+ 568 0067 1B020000 		.4byte	.LASF8
+ 569 006b 04       		.uleb128 0x4
+ 570 006c 3B010000 		.4byte	.LASF9
+ 571 0070 02       		.byte	0x2
+ 572 0071 E401     		.2byte	0x1e4
+ 573 0073 2C000000 		.4byte	0x2c
+ 574 0077 04       		.uleb128 0x4
+ 575 0078 EF010000 		.4byte	.LASF10
+ 576 007c 02       		.byte	0x2
+ 577 007d E601     		.2byte	0x1e6
+ 578 007f 48000000 		.4byte	0x48
+ 579 0083 02       		.uleb128 0x2
+ 580 0084 04       		.byte	0x4
+ 581 0085 04       		.byte	0x4
+ 582 0086 D6000000 		.4byte	.LASF11
+ 583 008a 02       		.uleb128 0x2
+ 584 008b 08       		.byte	0x8
+ 585 008c 04       		.byte	0x4
+ 586 008d 65000000 		.4byte	.LASF12
+ 587 0091 02       		.uleb128 0x2
+ 588 0092 01       		.byte	0x1
+ 589 0093 08       		.byte	0x8
+ 590 0094 2F020000 		.4byte	.LASF13
+ 591 0098 05       		.uleb128 0x5
+ 592 0099 6B000000 		.4byte	0x6b
+ 593 009d 02       		.uleb128 0x2
+ 594 009e 08       		.byte	0x8
+ 595 009f 04       		.byte	0x4
+ 596 00a0 9F020000 		.4byte	.LASF14
+ 597 00a4 02       		.uleb128 0x2
+ 598 00a5 04       		.byte	0x4
+ 599 00a6 07       		.byte	0x7
+ 600 00a7 58020000 		.4byte	.LASF15
+ 601 00ab 06       		.uleb128 0x6
+ 602 00ac 34020000 		.4byte	.LASF19
+ 603 00b0 01       		.byte	0x1
+ 604 00b1 62       		.byte	0x62
+ 605 00b2 00000000 		.4byte	.LFB35
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 18
+
+
+ 606 00b6 34000000 		.4byte	.LFE35-.LFB35
+ 607 00ba 01       		.uleb128 0x1
+ 608 00bb 9C       		.byte	0x9c
+ 609 00bc D2000000 		.4byte	0xd2
+ 610 00c0 07       		.uleb128 0x7
+ 611 00c1 28020000 		.4byte	.LASF21
+ 612 00c5 01       		.byte	0x1
+ 613 00c6 64       		.byte	0x64
+ 614 00c7 6B000000 		.4byte	0x6b
+ 615 00cb 05       		.uleb128 0x5
+ 616 00cc 03       		.byte	0x3
+ 617 00cd 00000000 		.4byte	bState.7323
+ 618 00d1 00       		.byte	0
+ 619 00d2 08       		.uleb128 0x8
+ 620 00d3 47020000 		.4byte	.LASF16
+ 621 00d7 01       		.byte	0x1
+ 622 00d8 7A       		.byte	0x7a
+ 623 00d9 00000000 		.4byte	.LFB36
+ 624 00dd 12000000 		.4byte	.LFE36-.LFB36
+ 625 00e1 01       		.uleb128 0x1
+ 626 00e2 9C       		.byte	0x9c
+ 627 00e3 08       		.uleb128 0x8
+ 628 00e4 76020000 		.4byte	.LASF17
+ 629 00e8 01       		.byte	0x1
+ 630 00e9 82       		.byte	0x82
+ 631 00ea 00000000 		.4byte	.LFB37
+ 632 00ee 12000000 		.4byte	.LFE37-.LFB37
+ 633 00f2 01       		.uleb128 0x1
+ 634 00f3 9C       		.byte	0x9c
+ 635 00f4 09       		.uleb128 0x9
+ 636 00f5 85020000 		.4byte	.LASF18
+ 637 00f9 01       		.byte	0x1
+ 638 00fa 88       		.byte	0x88
+ 639 00fb 00000000 		.4byte	.LFB38
+ 640 00ff 0A000000 		.4byte	.LFE38-.LFB38
+ 641 0103 01       		.uleb128 0x1
+ 642 0104 9C       		.byte	0x9c
+ 643 0105 0A       		.uleb128 0xa
+ 644 0106 EA010000 		.4byte	.LASF20
+ 645 010a 01       		.byte	0x1
+ 646 010b 9D       		.byte	0x9d
+ 647 010c 5D000000 		.4byte	0x5d
+ 648 0110 00000000 		.4byte	.LFB39
+ 649 0114 9C000000 		.4byte	.LFE39-.LFB39
+ 650 0118 01       		.uleb128 0x1
+ 651 0119 9C       		.byte	0x9c
+ 652 011a 30010000 		.4byte	0x130
+ 653 011e 07       		.uleb128 0x7
+ 654 011f 00000000 		.4byte	.LASF22
+ 655 0123 01       		.byte	0x1
+ 656 0124 9F       		.byte	0x9f
+ 657 0125 30010000 		.4byte	0x130
+ 658 0129 05       		.uleb128 0x5
+ 659 012a 03       		.byte	0x3
+ 660 012b 01000000 		.4byte	bIsKeyWTD_Started.7335
+ 661 012f 00       		.byte	0
+ 662 0130 02       		.uleb128 0x2
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 19
+
+
+ 663 0131 01       		.byte	0x1
+ 664 0132 02       		.byte	0x2
+ 665 0133 B7020000 		.4byte	.LASF23
+ 666 0137 06       		.uleb128 0x6
+ 667 0138 2B000000 		.4byte	.LASF24
+ 668 013c 01       		.byte	0x1
+ 669 013d F9       		.byte	0xf9
+ 670 013e 00000000 		.4byte	.LFB40
+ 671 0142 DC000000 		.4byte	.LFE40-.LFB40
+ 672 0146 01       		.uleb128 0x1
+ 673 0147 9C       		.byte	0x9c
+ 674 0148 5C010000 		.4byte	0x15c
+ 675 014c 0B       		.uleb128 0xb
+ 676 014d 40020000 		.4byte	.LASF25
+ 677 0151 01       		.byte	0x1
+ 678 0152 1901     		.2byte	0x119
+ 679 0154 77000000 		.4byte	0x77
+ 680 0158 02       		.uleb128 0x2
+ 681 0159 91       		.byte	0x91
+ 682 015a 74       		.sleb128 -12
+ 683 015b 00       		.byte	0
+ 684 015c 0C       		.uleb128 0xc
+ 685 015d 3C000000 		.4byte	.LASF26
+ 686 0161 01       		.byte	0x1
+ 687 0162 4F01     		.2byte	0x14f
+ 688 0164 00000000 		.4byte	.LFB41
+ 689 0168 70000000 		.4byte	.LFE41-.LFB41
+ 690 016c 01       		.uleb128 0x1
+ 691 016d 9C       		.byte	0x9c
+ 692 016e D1010000 		.4byte	0x1d1
+ 693 0172 0B       		.uleb128 0xb
+ 694 0173 CA000000 		.4byte	.LASF27
+ 695 0177 01       		.byte	0x1
+ 696 0178 5101     		.2byte	0x151
+ 697 017a 6B000000 		.4byte	0x6b
+ 698 017e 05       		.uleb128 0x5
+ 699 017f 03       		.byte	0x3
+ 700 0180 02000000 		.4byte	bLastButton.7352
+ 701 0184 0B       		.uleb128 0xb
+ 702 0185 41010000 		.4byte	.LASF28
+ 703 0189 01       		.byte	0x1
+ 704 018a 5201     		.2byte	0x152
+ 705 018c 6B000000 		.4byte	0x6b
+ 706 0190 05       		.uleb128 0x5
+ 707 0191 03       		.byte	0x3
+ 708 0192 03000000 		.4byte	bLastMouseWheel.7353
+ 709 0196 0B       		.uleb128 0xb
+ 710 0197 DF010000 		.4byte	.LASF29
+ 711 019b 01       		.byte	0x1
+ 712 019c 5501     		.2byte	0x155
+ 713 019e 6B000000 		.4byte	0x6b
+ 714 01a2 02       		.uleb128 0x2
+ 715 01a3 91       		.byte	0x91
+ 716 01a4 77       		.sleb128 -9
+ 717 01a5 0B       		.uleb128 0xb
+ 718 01a6 BD020000 		.4byte	.LASF30
+ 719 01aa 01       		.byte	0x1
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 20
+
+
+ 720 01ab 5601     		.2byte	0x156
+ 721 01ad 6B000000 		.4byte	0x6b
+ 722 01b1 02       		.uleb128 0x2
+ 723 01b2 91       		.byte	0x91
+ 724 01b3 76       		.sleb128 -10
+ 725 01b4 0D       		.uleb128 0xd
+ 726 01b5 2A000000 		.4byte	.LBB2
+ 727 01b9 28000000 		.4byte	.LBE2-.LBB2
+ 728 01bd 0B       		.uleb128 0xb
+ 729 01be 12000000 		.4byte	.LASF31
+ 730 01c2 01       		.byte	0x1
+ 731 01c3 6401     		.2byte	0x164
+ 732 01c5 D1010000 		.4byte	0x1d1
+ 733 01c9 05       		.uleb128 0x5
+ 734 01ca 03       		.byte	0x3
+ 735 01cb 04000000 		.4byte	bMouseData.7356
+ 736 01cf 00       		.byte	0
+ 737 01d0 00       		.byte	0
+ 738 01d1 0E       		.uleb128 0xe
+ 739 01d2 6B000000 		.4byte	0x6b
+ 740 01d6 E1010000 		.4byte	0x1e1
+ 741 01da 0F       		.uleb128 0xf
+ 742 01db A4000000 		.4byte	0xa4
+ 743 01df 01       		.byte	0x1
+ 744 01e0 00       		.byte	0
+ 745 01e1 10       		.uleb128 0x10
+ 746 01e2 01010000 		.4byte	.LASF32
+ 747 01e6 03       		.byte	0x3
+ 748 01e7 B50A     		.2byte	0xab5
+ 749 01e9 98000000 		.4byte	0x98
+ 750 01ed 11       		.uleb128 0x11
+ 751 01ee F6010000 		.4byte	.LASF33
+ 752 01f2 01       		.byte	0x1
+ 753 01f3 56       		.byte	0x56
+ 754 01f4 6B000000 		.4byte	0x6b
+ 755 01f8 11       		.uleb128 0x11
+ 756 01f9 12010000 		.4byte	.LASF34
+ 757 01fd 01       		.byte	0x1
+ 758 01fe 5A       		.byte	0x5a
+ 759 01ff 6B000000 		.4byte	0x6b
+ 760 0203 11       		.uleb128 0x11
+ 761 0204 06020000 		.4byte	.LASF35
+ 762 0208 01       		.byte	0x1
+ 763 0209 5D       		.byte	0x5d
+ 764 020a 6B000000 		.4byte	0x6b
+ 765 020e 11       		.uleb128 0x11
+ 766 020f 1D000000 		.4byte	.LASF36
+ 767 0213 01       		.byte	0x1
+ 768 0214 5F       		.byte	0x5f
+ 769 0215 98000000 		.4byte	0x98
+ 770 0219 00       		.byte	0
+ 771              		.section	.debug_abbrev,"",%progbits
+ 772              	.Ldebug_abbrev0:
+ 773 0000 01       		.uleb128 0x1
+ 774 0001 11       		.uleb128 0x11
+ 775 0002 01       		.byte	0x1
+ 776 0003 25       		.uleb128 0x25
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 21
+
+
+ 777 0004 0E       		.uleb128 0xe
+ 778 0005 13       		.uleb128 0x13
+ 779 0006 0B       		.uleb128 0xb
+ 780 0007 03       		.uleb128 0x3
+ 781 0008 0E       		.uleb128 0xe
+ 782 0009 1B       		.uleb128 0x1b
+ 783 000a 0E       		.uleb128 0xe
+ 784 000b 55       		.uleb128 0x55
+ 785 000c 17       		.uleb128 0x17
+ 786 000d 11       		.uleb128 0x11
+ 787 000e 01       		.uleb128 0x1
+ 788 000f 10       		.uleb128 0x10
+ 789 0010 17       		.uleb128 0x17
+ 790 0011 00       		.byte	0
+ 791 0012 00       		.byte	0
+ 792 0013 02       		.uleb128 0x2
+ 793 0014 24       		.uleb128 0x24
+ 794 0015 00       		.byte	0
+ 795 0016 0B       		.uleb128 0xb
+ 796 0017 0B       		.uleb128 0xb
+ 797 0018 3E       		.uleb128 0x3e
+ 798 0019 0B       		.uleb128 0xb
+ 799 001a 03       		.uleb128 0x3
+ 800 001b 0E       		.uleb128 0xe
+ 801 001c 00       		.byte	0
+ 802 001d 00       		.byte	0
+ 803 001e 03       		.uleb128 0x3
+ 804 001f 24       		.uleb128 0x24
+ 805 0020 00       		.byte	0
+ 806 0021 0B       		.uleb128 0xb
+ 807 0022 0B       		.uleb128 0xb
+ 808 0023 3E       		.uleb128 0x3e
+ 809 0024 0B       		.uleb128 0xb
+ 810 0025 03       		.uleb128 0x3
+ 811 0026 08       		.uleb128 0x8
+ 812 0027 00       		.byte	0
+ 813 0028 00       		.byte	0
+ 814 0029 04       		.uleb128 0x4
+ 815 002a 16       		.uleb128 0x16
+ 816 002b 00       		.byte	0
+ 817 002c 03       		.uleb128 0x3
+ 818 002d 0E       		.uleb128 0xe
+ 819 002e 3A       		.uleb128 0x3a
+ 820 002f 0B       		.uleb128 0xb
+ 821 0030 3B       		.uleb128 0x3b
+ 822 0031 05       		.uleb128 0x5
+ 823 0032 49       		.uleb128 0x49
+ 824 0033 13       		.uleb128 0x13
+ 825 0034 00       		.byte	0
+ 826 0035 00       		.byte	0
+ 827 0036 05       		.uleb128 0x5
+ 828 0037 35       		.uleb128 0x35
+ 829 0038 00       		.byte	0
+ 830 0039 49       		.uleb128 0x49
+ 831 003a 13       		.uleb128 0x13
+ 832 003b 00       		.byte	0
+ 833 003c 00       		.byte	0
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 22
+
+
+ 834 003d 06       		.uleb128 0x6
+ 835 003e 2E       		.uleb128 0x2e
+ 836 003f 01       		.byte	0x1
+ 837 0040 3F       		.uleb128 0x3f
+ 838 0041 19       		.uleb128 0x19
+ 839 0042 03       		.uleb128 0x3
+ 840 0043 0E       		.uleb128 0xe
+ 841 0044 3A       		.uleb128 0x3a
+ 842 0045 0B       		.uleb128 0xb
+ 843 0046 3B       		.uleb128 0x3b
+ 844 0047 0B       		.uleb128 0xb
+ 845 0048 27       		.uleb128 0x27
+ 846 0049 19       		.uleb128 0x19
+ 847 004a 11       		.uleb128 0x11
+ 848 004b 01       		.uleb128 0x1
+ 849 004c 12       		.uleb128 0x12
+ 850 004d 06       		.uleb128 0x6
+ 851 004e 40       		.uleb128 0x40
+ 852 004f 18       		.uleb128 0x18
+ 853 0050 9642     		.uleb128 0x2116
+ 854 0052 19       		.uleb128 0x19
+ 855 0053 01       		.uleb128 0x1
+ 856 0054 13       		.uleb128 0x13
+ 857 0055 00       		.byte	0
+ 858 0056 00       		.byte	0
+ 859 0057 07       		.uleb128 0x7
+ 860 0058 34       		.uleb128 0x34
+ 861 0059 00       		.byte	0
+ 862 005a 03       		.uleb128 0x3
+ 863 005b 0E       		.uleb128 0xe
+ 864 005c 3A       		.uleb128 0x3a
+ 865 005d 0B       		.uleb128 0xb
+ 866 005e 3B       		.uleb128 0x3b
+ 867 005f 0B       		.uleb128 0xb
+ 868 0060 49       		.uleb128 0x49
+ 869 0061 13       		.uleb128 0x13
+ 870 0062 02       		.uleb128 0x2
+ 871 0063 18       		.uleb128 0x18
+ 872 0064 00       		.byte	0
+ 873 0065 00       		.byte	0
+ 874 0066 08       		.uleb128 0x8
+ 875 0067 2E       		.uleb128 0x2e
+ 876 0068 00       		.byte	0
+ 877 0069 3F       		.uleb128 0x3f
+ 878 006a 19       		.uleb128 0x19
+ 879 006b 03       		.uleb128 0x3
+ 880 006c 0E       		.uleb128 0xe
+ 881 006d 3A       		.uleb128 0x3a
+ 882 006e 0B       		.uleb128 0xb
+ 883 006f 3B       		.uleb128 0x3b
+ 884 0070 0B       		.uleb128 0xb
+ 885 0071 27       		.uleb128 0x27
+ 886 0072 19       		.uleb128 0x19
+ 887 0073 11       		.uleb128 0x11
+ 888 0074 01       		.uleb128 0x1
+ 889 0075 12       		.uleb128 0x12
+ 890 0076 06       		.uleb128 0x6
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 23
+
+
+ 891 0077 40       		.uleb128 0x40
+ 892 0078 18       		.uleb128 0x18
+ 893 0079 9642     		.uleb128 0x2116
+ 894 007b 19       		.uleb128 0x19
+ 895 007c 00       		.byte	0
+ 896 007d 00       		.byte	0
+ 897 007e 09       		.uleb128 0x9
+ 898 007f 2E       		.uleb128 0x2e
+ 899 0080 00       		.byte	0
+ 900 0081 3F       		.uleb128 0x3f
+ 901 0082 19       		.uleb128 0x19
+ 902 0083 03       		.uleb128 0x3
+ 903 0084 0E       		.uleb128 0xe
+ 904 0085 3A       		.uleb128 0x3a
+ 905 0086 0B       		.uleb128 0xb
+ 906 0087 3B       		.uleb128 0x3b
+ 907 0088 0B       		.uleb128 0xb
+ 908 0089 27       		.uleb128 0x27
+ 909 008a 19       		.uleb128 0x19
+ 910 008b 11       		.uleb128 0x11
+ 911 008c 01       		.uleb128 0x1
+ 912 008d 12       		.uleb128 0x12
+ 913 008e 06       		.uleb128 0x6
+ 914 008f 40       		.uleb128 0x40
+ 915 0090 18       		.uleb128 0x18
+ 916 0091 9742     		.uleb128 0x2117
+ 917 0093 19       		.uleb128 0x19
+ 918 0094 00       		.byte	0
+ 919 0095 00       		.byte	0
+ 920 0096 0A       		.uleb128 0xa
+ 921 0097 2E       		.uleb128 0x2e
+ 922 0098 01       		.byte	0x1
+ 923 0099 3F       		.uleb128 0x3f
+ 924 009a 19       		.uleb128 0x19
+ 925 009b 03       		.uleb128 0x3
+ 926 009c 0E       		.uleb128 0xe
+ 927 009d 3A       		.uleb128 0x3a
+ 928 009e 0B       		.uleb128 0xb
+ 929 009f 3B       		.uleb128 0x3b
+ 930 00a0 0B       		.uleb128 0xb
+ 931 00a1 49       		.uleb128 0x49
+ 932 00a2 13       		.uleb128 0x13
+ 933 00a3 11       		.uleb128 0x11
+ 934 00a4 01       		.uleb128 0x1
+ 935 00a5 12       		.uleb128 0x12
+ 936 00a6 06       		.uleb128 0x6
+ 937 00a7 40       		.uleb128 0x40
+ 938 00a8 18       		.uleb128 0x18
+ 939 00a9 9642     		.uleb128 0x2116
+ 940 00ab 19       		.uleb128 0x19
+ 941 00ac 01       		.uleb128 0x1
+ 942 00ad 13       		.uleb128 0x13
+ 943 00ae 00       		.byte	0
+ 944 00af 00       		.byte	0
+ 945 00b0 0B       		.uleb128 0xb
+ 946 00b1 34       		.uleb128 0x34
+ 947 00b2 00       		.byte	0
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 24
+
+
+ 948 00b3 03       		.uleb128 0x3
+ 949 00b4 0E       		.uleb128 0xe
+ 950 00b5 3A       		.uleb128 0x3a
+ 951 00b6 0B       		.uleb128 0xb
+ 952 00b7 3B       		.uleb128 0x3b
+ 953 00b8 05       		.uleb128 0x5
+ 954 00b9 49       		.uleb128 0x49
+ 955 00ba 13       		.uleb128 0x13
+ 956 00bb 02       		.uleb128 0x2
+ 957 00bc 18       		.uleb128 0x18
+ 958 00bd 00       		.byte	0
+ 959 00be 00       		.byte	0
+ 960 00bf 0C       		.uleb128 0xc
+ 961 00c0 2E       		.uleb128 0x2e
+ 962 00c1 01       		.byte	0x1
+ 963 00c2 3F       		.uleb128 0x3f
+ 964 00c3 19       		.uleb128 0x19
+ 965 00c4 03       		.uleb128 0x3
+ 966 00c5 0E       		.uleb128 0xe
+ 967 00c6 3A       		.uleb128 0x3a
+ 968 00c7 0B       		.uleb128 0xb
+ 969 00c8 3B       		.uleb128 0x3b
+ 970 00c9 05       		.uleb128 0x5
+ 971 00ca 27       		.uleb128 0x27
+ 972 00cb 19       		.uleb128 0x19
+ 973 00cc 11       		.uleb128 0x11
+ 974 00cd 01       		.uleb128 0x1
+ 975 00ce 12       		.uleb128 0x12
+ 976 00cf 06       		.uleb128 0x6
+ 977 00d0 40       		.uleb128 0x40
+ 978 00d1 18       		.uleb128 0x18
+ 979 00d2 9642     		.uleb128 0x2116
+ 980 00d4 19       		.uleb128 0x19
+ 981 00d5 01       		.uleb128 0x1
+ 982 00d6 13       		.uleb128 0x13
+ 983 00d7 00       		.byte	0
+ 984 00d8 00       		.byte	0
+ 985 00d9 0D       		.uleb128 0xd
+ 986 00da 0B       		.uleb128 0xb
+ 987 00db 01       		.byte	0x1
+ 988 00dc 11       		.uleb128 0x11
+ 989 00dd 01       		.uleb128 0x1
+ 990 00de 12       		.uleb128 0x12
+ 991 00df 06       		.uleb128 0x6
+ 992 00e0 00       		.byte	0
+ 993 00e1 00       		.byte	0
+ 994 00e2 0E       		.uleb128 0xe
+ 995 00e3 01       		.uleb128 0x1
+ 996 00e4 01       		.byte	0x1
+ 997 00e5 49       		.uleb128 0x49
+ 998 00e6 13       		.uleb128 0x13
+ 999 00e7 01       		.uleb128 0x1
+ 1000 00e8 13       		.uleb128 0x13
+ 1001 00e9 00       		.byte	0
+ 1002 00ea 00       		.byte	0
+ 1003 00eb 0F       		.uleb128 0xf
+ 1004 00ec 21       		.uleb128 0x21
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 25
+
+
+ 1005 00ed 00       		.byte	0
+ 1006 00ee 49       		.uleb128 0x49
+ 1007 00ef 13       		.uleb128 0x13
+ 1008 00f0 2F       		.uleb128 0x2f
+ 1009 00f1 0B       		.uleb128 0xb
+ 1010 00f2 00       		.byte	0
+ 1011 00f3 00       		.byte	0
+ 1012 00f4 10       		.uleb128 0x10
+ 1013 00f5 34       		.uleb128 0x34
+ 1014 00f6 00       		.byte	0
+ 1015 00f7 03       		.uleb128 0x3
+ 1016 00f8 0E       		.uleb128 0xe
+ 1017 00f9 3A       		.uleb128 0x3a
+ 1018 00fa 0B       		.uleb128 0xb
+ 1019 00fb 3B       		.uleb128 0x3b
+ 1020 00fc 05       		.uleb128 0x5
+ 1021 00fd 49       		.uleb128 0x49
+ 1022 00fe 13       		.uleb128 0x13
+ 1023 00ff 3F       		.uleb128 0x3f
+ 1024 0100 19       		.uleb128 0x19
+ 1025 0101 3C       		.uleb128 0x3c
+ 1026 0102 19       		.uleb128 0x19
+ 1027 0103 00       		.byte	0
+ 1028 0104 00       		.byte	0
+ 1029 0105 11       		.uleb128 0x11
+ 1030 0106 34       		.uleb128 0x34
+ 1031 0107 00       		.byte	0
+ 1032 0108 03       		.uleb128 0x3
+ 1033 0109 0E       		.uleb128 0xe
+ 1034 010a 3A       		.uleb128 0x3a
+ 1035 010b 0B       		.uleb128 0xb
+ 1036 010c 3B       		.uleb128 0x3b
+ 1037 010d 0B       		.uleb128 0xb
+ 1038 010e 49       		.uleb128 0x49
+ 1039 010f 13       		.uleb128 0x13
+ 1040 0110 3F       		.uleb128 0x3f
+ 1041 0111 19       		.uleb128 0x19
+ 1042 0112 3C       		.uleb128 0x3c
+ 1043 0113 19       		.uleb128 0x19
+ 1044 0114 00       		.byte	0
+ 1045 0115 00       		.byte	0
+ 1046 0116 00       		.byte	0
+ 1047              		.section	.debug_aranges,"",%progbits
+ 1048 0000 4C000000 		.4byte	0x4c
+ 1049 0004 0200     		.2byte	0x2
+ 1050 0006 00000000 		.4byte	.Ldebug_info0
+ 1051 000a 04       		.byte	0x4
+ 1052 000b 00       		.byte	0
+ 1053 000c 0000     		.2byte	0
+ 1054 000e 0000     		.2byte	0
+ 1055 0010 00000000 		.4byte	.LFB35
+ 1056 0014 34000000 		.4byte	.LFE35-.LFB35
+ 1057 0018 00000000 		.4byte	.LFB36
+ 1058 001c 12000000 		.4byte	.LFE36-.LFB36
+ 1059 0020 00000000 		.4byte	.LFB37
+ 1060 0024 12000000 		.4byte	.LFE37-.LFB37
+ 1061 0028 00000000 		.4byte	.LFB38
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 26
+
+
+ 1062 002c 0A000000 		.4byte	.LFE38-.LFB38
+ 1063 0030 00000000 		.4byte	.LFB39
+ 1064 0034 9C000000 		.4byte	.LFE39-.LFB39
+ 1065 0038 00000000 		.4byte	.LFB40
+ 1066 003c DC000000 		.4byte	.LFE40-.LFB40
+ 1067 0040 00000000 		.4byte	.LFB41
+ 1068 0044 70000000 		.4byte	.LFE41-.LFB41
+ 1069 0048 00000000 		.4byte	0
+ 1070 004c 00000000 		.4byte	0
+ 1071              		.section	.debug_ranges,"",%progbits
+ 1072              	.Ldebug_ranges0:
+ 1073 0000 00000000 		.4byte	.LFB35
+ 1074 0004 34000000 		.4byte	.LFE35
+ 1075 0008 00000000 		.4byte	.LFB36
+ 1076 000c 12000000 		.4byte	.LFE36
+ 1077 0010 00000000 		.4byte	.LFB37
+ 1078 0014 12000000 		.4byte	.LFE37
+ 1079 0018 00000000 		.4byte	.LFB38
+ 1080 001c 0A000000 		.4byte	.LFE38
+ 1081 0020 00000000 		.4byte	.LFB39
+ 1082 0024 9C000000 		.4byte	.LFE39
+ 1083 0028 00000000 		.4byte	.LFB40
+ 1084 002c DC000000 		.4byte	.LFE40
+ 1085 0030 00000000 		.4byte	.LFB41
+ 1086 0034 70000000 		.4byte	.LFE41
+ 1087 0038 00000000 		.4byte	0
+ 1088 003c 00000000 		.4byte	0
+ 1089              		.section	.debug_line,"",%progbits
+ 1090              	.Ldebug_line0:
+ 1091 0000 1A010000 		.section	.debug_str,"MS",%progbits,1
+ 1091      02005700 
+ 1091      00000201 
+ 1091      FB0E0D00 
+ 1091      01010101 
+ 1092              	.LASF22:
+ 1093 0000 6249734B 		.ascii	"bIsKeyWTD_Started\000"
+ 1093      65795754 
+ 1093      445F5374 
+ 1093      61727465 
+ 1093      6400
+ 1094              	.LASF31:
+ 1095 0012 624D6F75 		.ascii	"bMouseData\000"
+ 1095      73654461 
+ 1095      746100
+ 1096              	.LASF36:
+ 1097 001d 67624375 		.ascii	"gbCurrentKeys\000"
+ 1097      7272656E 
+ 1097      744B6579 
+ 1097      7300
+ 1098              	.LASF24:
+ 1099 002b 496E6974 		.ascii	"InitializeSystem\000"
+ 1099      69616C69 
+ 1099      7A655379 
+ 1099      7374656D 
+ 1099      00
+ 1100              	.LASF26:
+ 1101 003c 48616E64 		.ascii	"HandleMouse\000"
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 27
+
+
+ 1101      6C654D6F 
+ 1101      75736500 
+ 1102              	.LASF3:
+ 1103 0048 73686F72 		.ascii	"short unsigned int\000"
+ 1103      7420756E 
+ 1103      7369676E 
+ 1103      65642069 
+ 1103      6E7400
+ 1104              	.LASF2:
+ 1105 005b 73686F72 		.ascii	"short int\000"
+ 1105      7420696E 
+ 1105      7400
+ 1106              	.LASF12:
+ 1107 0065 646F7562 		.ascii	"double\000"
+ 1107      6C6500
+ 1108              	.LASF39:
+ 1109 006c 433A5C55 		.ascii	"C:\\Users\\bernde\\Documents\\PSoC Creator\\Martins"
+ 1109      73657273 
+ 1109      5C626572 
+ 1109      6E64655C 
+ 1109      446F6375 
+ 1110 009a 4D6F7573 		.ascii	"MouseOhneWheelFinal\\MartinsMouseOhneWheel.cydsn\000"
+ 1110      654F686E 
+ 1110      65576865 
+ 1110      656C4669 
+ 1110      6E616C5C 
+ 1111              	.LASF27:
+ 1112 00ca 624C6173 		.ascii	"bLastButton\000"
+ 1112      74427574 
+ 1112      746F6E00 
+ 1113              	.LASF11:
+ 1114 00d6 666C6F61 		.ascii	"float\000"
+ 1114      7400
+ 1115              	.LASF7:
+ 1116 00dc 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1116      206C6F6E 
+ 1116      6720756E 
+ 1116      7369676E 
+ 1116      65642069 
+ 1117              	.LASF1:
+ 1118 00f3 756E7369 		.ascii	"unsigned char\000"
+ 1118      676E6564 
+ 1118      20636861 
+ 1118      7200
+ 1119              	.LASF32:
+ 1120 0101 6379426C 		.ascii	"cyBle_busyStatus\000"
+ 1120      655F6275 
+ 1120      73795374 
+ 1120      61747573 
+ 1120      00
+ 1121              	.LASF34:
+ 1122 0112 73656E64 		.ascii	"sendMouseNotifications\000"
+ 1122      4D6F7573 
+ 1122      654E6F74 
+ 1122      69666963 
+ 1122      6174696F 
+ 1123              	.LASF5:
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 28
+
+
+ 1124 0129 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1124      20756E73 
+ 1124      69676E65 
+ 1124      6420696E 
+ 1124      7400
+ 1125              	.LASF9:
+ 1126 013b 75696E74 		.ascii	"uint8\000"
+ 1126      3800
+ 1127              	.LASF28:
+ 1128 0141 624C6173 		.ascii	"bLastMouseWheel\000"
+ 1128      744D6F75 
+ 1128      73655768 
+ 1128      65656C00 
+ 1129              	.LASF37:
+ 1130 0151 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 1130      43313120 
+ 1130      352E342E 
+ 1130      31203230 
+ 1130      31363036 
+ 1131 0184 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0 -mthumb -g -O"
+ 1131      20726576 
+ 1131      6973696F 
+ 1131      6E203233 
+ 1131      37373135 
+ 1132 01b7 30202D66 		.ascii	"0 -ffunction-sections -ffat-lto-objects\000"
+ 1132      66756E63 
+ 1132      74696F6E 
+ 1132      2D736563 
+ 1132      74696F6E 
+ 1133              	.LASF29:
+ 1134 01df 62437572 		.ascii	"bCurButton\000"
+ 1134      42757474 
+ 1134      6F6E00
+ 1135              	.LASF20:
+ 1136 01ea 6D61696E 		.ascii	"main\000"
+ 1136      00
+ 1137              	.LASF10:
+ 1138 01ef 75696E74 		.ascii	"uint32\000"
+ 1138      333200
+ 1139              	.LASF33:
+ 1140 01f6 64657669 		.ascii	"deviceConnected\000"
+ 1140      6365436F 
+ 1140      6E6E6563 
+ 1140      74656400 
+ 1141              	.LASF35:
+ 1142 0206 72657374 		.ascii	"restartAdvertisement\000"
+ 1142      61727441 
+ 1142      64766572 
+ 1142      74697365 
+ 1142      6D656E74 
+ 1143              	.LASF8:
+ 1144 021b 756E7369 		.ascii	"unsigned int\000"
+ 1144      676E6564 
+ 1144      20696E74 
+ 1144      00
+ 1145              	.LASF21:
+ 1146 0228 62537461 		.ascii	"bState\000"
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 29
+
+
+ 1146      746500
+ 1147              	.LASF13:
+ 1148 022f 63686172 		.ascii	"char\000"
+ 1148      00
+ 1149              	.LASF19:
+ 1150 0234 546F6F67 		.ascii	"ToogleGREEN\000"
+ 1150      6C654752 
+ 1150      45454E00 
+ 1151              	.LASF25:
+ 1152 0240 72656173 		.ascii	"reason\000"
+ 1152      6F6E00
+ 1153              	.LASF16:
+ 1154 0247 4D794D61 		.ascii	"MyMainButtonsISR\000"
+ 1154      696E4275 
+ 1154      74746F6E 
+ 1154      73495352 
+ 1154      00
+ 1155              	.LASF15:
+ 1156 0258 73697A65 		.ascii	"sizetype\000"
+ 1156      74797065 
+ 1156      00
+ 1157              	.LASF6:
+ 1158 0261 6C6F6E67 		.ascii	"long long int\000"
+ 1158      206C6F6E 
+ 1158      6720696E 
+ 1158      7400
+ 1159              	.LASF38:
+ 1160 026f 6D61696E 		.ascii	"main.c\000"
+ 1160      2E6300
+ 1161              	.LASF17:
+ 1162 0276 4D794D69 		.ascii	"MyMidButtonISR\000"
+ 1162      64427574 
+ 1162      746F6E49 
+ 1162      535200
+ 1163              	.LASF18:
+ 1164 0285 4D795269 		.ascii	"MyRightButtonISR\000"
+ 1164      67687442 
+ 1164      7574746F 
+ 1164      6E495352 
+ 1164      00
+ 1165              	.LASF4:
+ 1166 0296 6C6F6E67 		.ascii	"long int\000"
+ 1166      20696E74 
+ 1166      00
+ 1167              	.LASF14:
+ 1168 029f 6C6F6E67 		.ascii	"long double\000"
+ 1168      20646F75 
+ 1168      626C6500 
+ 1169              	.LASF0:
+ 1170 02ab 7369676E 		.ascii	"signed char\000"
+ 1170      65642063 
+ 1170      68617200 
+ 1171              	.LASF23:
+ 1172 02b7 5F426F6F 		.ascii	"_Bool\000"
+ 1172      6C00
+ 1173              	.LASF30:
+ 1174 02bd 62437572 		.ascii	"bCurMouseWeehl\000"
+ARM GAS  C:\Users\bernde\AppData\Local\Temp\ccDyq6pO.s 			page 30
+
+
+ 1174      4D6F7573 
+ 1174      65576565 
+ 1174      686C00
+ 1175              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran
